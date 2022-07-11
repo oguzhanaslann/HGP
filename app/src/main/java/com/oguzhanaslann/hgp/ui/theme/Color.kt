@@ -25,3 +25,5 @@ val antiFlashWhite = Color(0xFFF0F4F3)
 val xanadu = Color(0xFF708F85)
 
 val arsenic = Color(0xFF384742)
+
+val jetStream = Color(0xFFB6C9C3)
