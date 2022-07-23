@@ -34,7 +34,7 @@ val poppins = FontFamily(
 
 //        val Light = W300
     Font(R.font.poppins_light, FontWeight.Light, FontStyle.Normal),
-    Font(R.font.poppins_light_italic, FontWeight.Light, FontStyle.Normal),
+    Font(R.font.poppins_light_italic, FontWeight.Light, FontStyle.Italic),
 
 //        val ExtraLight = W200
 //        /** Alias for [W300] */
@@ -44,5 +44,5 @@ val poppins = FontFamily(
 //        val Thin = W100
 //        /** Alias for [W200] */
     Font(R.font.poppins_thin, FontWeight.Thin, FontStyle.Normal),
-    Font(R.font.poppins_thin_italic, FontWeight.Thin, FontStyle.Italic),
+    Font(R.font.poppins_thin_italic, FontWeight.Thin, FontStyle.Italic)
 )
