@@ -1,10 +1,10 @@
-package com.oguzhanaslann.hgp.ui.theme
+package com.oguzhanaslann.commonui.theme
 
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import com.oguzhanaslann.hgp.R
+import com.oguzhanaslann.commonui.R
 
 val poppins = FontFamily(
 //        val Black = W900

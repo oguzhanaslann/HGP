@@ -1,18 +1,18 @@
-package com.oguzhanaslann.hgp.ui.onboarding
+package com.oguzhanaslann.onboarding.onboarding
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.*
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.google.accompanist.pager.ExperimentalPagerApi
 import com.google.accompanist.pager.HorizontalPager
@@ -20,11 +20,10 @@ import com.google.accompanist.pager.PagerState
 import com.google.accompanist.pager.rememberPagerState
 import com.google.accompanist.systemuicontroller.SystemUiController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
-import com.oguzhanaslann.hgp.R
-import com.oguzhanaslann.hgp.ui.PagerIndicator
-import com.oguzhanaslann.hgp.ui.theme.HGPTheme
-import com.oguzhanaslann.hgp.ui.theme.contentPadding
-import com.oguzhanaslann.hgp.ui.theme.jetStream
+import com.oguzhanaslann.commonui.PagerIndicator
+import com.oguzhanaslann.commonui.theme.contentPadding
+import com.oguzhanaslann.commonui.theme.jetStream
+import com.oguzhanaslann.onboarding.R
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalPagerApi::class)
@@ -104,7 +103,7 @@ fun OnBoardingView(
                         val nextStep = pagerState.currentPage + 1
 
                         if (nextStep < pagerState.pageCount) {
-                            pagerState.animateScrollToPage(nextStep , pagerState.currentPageOffset)
+                            pagerState.animateScrollToPage(nextStep, pagerState.currentPageOffset)
                         } else {
                             onSkip()
                         }
@@ -119,6 +118,7 @@ fun OnBoardingView(
         }
     }
 }
+
 @Composable
 private fun LiveGreenerView() {
     OnboardPageView {
@@ -257,11 +257,11 @@ private fun OnBoardPager(
     }
 }
 
-
-@Preview(showBackground = true, showSystemUi = true)
-@Composable
-fun OnBoardingViewPreview() {
-    HGPTheme {
-        OnBoardingView()
-    }
-}
+//
+//@Preview(showBackground = true, showSystemUi = true)
+//@Composable
+//fun OnBoardingViewPreview() {
+//    HGPTheme {
+//        OnBoardingView()
+//    }
+//}

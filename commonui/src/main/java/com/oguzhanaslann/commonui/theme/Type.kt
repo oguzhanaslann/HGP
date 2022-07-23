@@ -1,4 +1,4 @@
-package com.oguzhanaslann.hgp.ui.theme
+package com.oguzhanaslann.commonui.theme
 
 import androidx.compose.material.Typography
 import androidx.compose.ui.text.TextStyle

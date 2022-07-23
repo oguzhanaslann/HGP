@@ -1,4 +1,4 @@
-package com.oguzhanaslann.hgp.ui
+package com.oguzhanaslann.commonui
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
@@ -14,7 +14,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import com.oguzhanaslann.hgp.ui.theme.HGPTheme
 
 @Composable
 @Suppress("LongParameterList")
@@ -59,15 +58,4 @@ fun Indicator(
             .background(color)
 
     )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun OnBoardingPreview() {
-    HGPTheme {
-        val currentSelectionIndex = remember { mutableStateOf(0) }
-        PagerIndicator(currentSelectionIndex = currentSelectionIndex.value, total = 3) {
-            currentSelectionIndex.value = it
-        }
-    }
 }
