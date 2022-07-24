@@ -54,6 +54,7 @@ dependencies {
     implementation project(":commonui")
     implementation project(":onboarding")
     implementation project(":navigation")
+    implementation project(":camera")
 
     implementation "androidx.core:core-ktx:$versions.core_ktx"
 

@@ -5,7 +5,7 @@ versions.compose_rc = '1.2.0-rc02'
 versions.hilt_version = '2.41'
 versions.core_ktx = '1.8.0'
 versions.nav_version = "2.5.0"
-
+versions.appcompat_version = "1.4.2"
 versions.accomplish = "0.24.13-rc"
 
 ext.versions = versions

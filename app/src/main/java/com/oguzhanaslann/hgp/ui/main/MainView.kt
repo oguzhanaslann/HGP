@@ -3,6 +3,7 @@ package com.oguzhanaslann.hgp.ui.main
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Surface
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -13,6 +14,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.oguzhanaslann.camera.CameraView
 import com.oguzhanaslann.hgp.MainViewModel
 import com.oguzhanaslann.navigation.ComposeNavigator
 import com.oguzhanaslann.navigation.Screen
@@ -83,7 +85,12 @@ fun MainView(
         }
 
         composable(Screen.Scanner.route) {
-            Greeting("Scanner")
+            Surface(
+                modifier = Modifier.fillMaxSize(),
+                color = MaterialTheme.colors.background
+            ) {
+                CameraView()
+            }
         }
     }
 }

@@ -48,8 +48,7 @@ dependencies {
     implementation project(":commonui")
 
     implementation "androidx.core:core-ktx:$versions.core_ktx"
-
-    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation "androidx.appcompat:appcompat:$versions.appcompat_version"
     implementation 'com.google.android.material:material:1.6.1'
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
