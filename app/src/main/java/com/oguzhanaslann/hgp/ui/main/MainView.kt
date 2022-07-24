@@ -14,8 +14,8 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.oguzhanaslann.hgp.MainViewModel
-import com.oguzhanaslann.hgp.ui.navigation.ComposeNavigator
-import com.oguzhanaslann.hgp.ui.navigation.Screen
+import com.oguzhanaslann.navigation.ComposeNavigator
+import com.oguzhanaslann.navigation.Screen
 import com.oguzhanaslann.onboarding.onboarding.OnBoardingView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.collectLatest

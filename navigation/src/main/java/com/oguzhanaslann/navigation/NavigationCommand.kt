@@ -1,4 +1,4 @@
-package com.oguzhanaslann.hgp.ui.navigation
+package com.oguzhanaslann.navigation
 
 import androidx.navigation.NavOptions
 

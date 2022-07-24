@@ -16,3 +16,4 @@ rootProject.name = "HGP"
 include ':app'
 include ':onboarding'
 include ':commonui'
+include ':navigation'

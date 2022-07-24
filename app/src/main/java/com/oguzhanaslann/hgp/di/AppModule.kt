@@ -1,7 +1,7 @@
 package com.oguzhanaslann.hgp.di
 
-import com.oguzhanaslann.hgp.ui.navigation.ComposeNavigator
-import com.oguzhanaslann.hgp.ui.navigation.ComposeNavigatorImp
+import com.oguzhanaslann.navigation.ComposeNavigator
+import com.oguzhanaslann.navigation.ComposeNavigatorImp
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn

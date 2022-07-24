@@ -10,7 +10,7 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.oguzhanaslann.commonui.theme.HGPTheme
 import com.oguzhanaslann.hgp.ui.main.MainView
-import com.oguzhanaslann.hgp.ui.navigation.ComposeNavigator
+import com.oguzhanaslann.navigation.ComposeNavigator
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 

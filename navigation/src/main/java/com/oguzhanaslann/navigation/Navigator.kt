@@ -1,4 +1,4 @@
-package com.oguzhanaslann.hgp.ui.navigation
+package com.oguzhanaslann.navigation
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.Observer
