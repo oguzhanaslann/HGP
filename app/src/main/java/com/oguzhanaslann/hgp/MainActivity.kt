@@ -33,37 +33,19 @@ class MainActivity : ComponentActivity() {
 
 
         setContent {
-
             val navState = rememberNavController()
 
             LaunchedEffect(Unit) {
                 navigator.handleNavigationCommands(navState)
             }
 
-            val isDoneOnBoarding = mainViewModel.isDoneOnBoarding.collectAsState()
-
             HGPTheme {
-                // A surface container using the 'background' color from the theme
                 MainView(
                     navigator = navigator,
                     navHostState = navState,
                     mainViewModel = mainViewModel
                 )
             }
-
-            //  when {
-            //        !isDoneOnBoarding -> OnBoardingView(
-            //            onSkip = onSkipOnBoarding,
-            //        )
-            //        else -> {
-            //            Surface(
-            //                modifier = Modifier.fillMaxSize(),
-            //                color = MaterialTheme.colors.background
-            //            ) {
-            //                Greeting("Android")
-            //            }
-            //        }
-            //    }
         }
     }
 

@@ -6,14 +6,14 @@ plugins {
 }
 
 android {
-    compileSdk 32
+    compileSdk build_versions.compile_sdk
 
     defaultConfig {
-        applicationId "com.oguzhanaslann.hgp"
-        minSdk 24
-        targetSdk 32
-        versionCode 1
-        versionName "1.0"
+        applicationId build_versions.application_id
+        minSdk build_versions.min_sdk
+        targetSdk build_versions.target_sdk
+        versionCode build_versions.version_code
+        versionName build_versions.version_name
 
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
@@ -55,12 +55,12 @@ dependencies {
     implementation project(":onboarding")
     implementation project(":navigation")
 
-    implementation 'androidx.core:core-ktx:1.8.0'
+    implementation "androidx.core:core-ktx:$versions.core_ktx"
 
     implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
 
-    implementation "com.google.dagger:hilt-android:$hilt_version"
-    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+    implementation "com.google.dagger:hilt-android:$versions.hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$versions.hilt_version"
 
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
