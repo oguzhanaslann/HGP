@@ -26,16 +26,14 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun rememberMainScreenState(
-    navController: NavHostController = rememberNavController(),
     viewModel: MainViewModel = viewModel(),
     coroutineScope: CoroutineScope = rememberCoroutineScope(),
     navigator: ComposeNavigator
-) = remember(navController, viewModel, coroutineScope) {
-    MainScreenState(navController, viewModel, coroutineScope, navigator)
+) = remember(viewModel, coroutineScope) {
+    MainScreenState(viewModel, coroutineScope, navigator)
 }
 
 class MainScreenState(
-    private val navController: NavHostController,
     private val mainViewModel: MainViewModel,
     coroutineScope: CoroutineScope,
     private val navigator: ComposeNavigator
@@ -65,7 +63,6 @@ fun MainView(
 ) {
 
     val mainScreenState = rememberMainScreenState(
-        navController = navHostState,
         viewModel = mainViewModel,
         coroutineScope = coroutineScope,
         navigator = navigator
@@ -76,7 +73,8 @@ fun MainView(
             .fillMaxSize()
             .background(MaterialTheme.colors.background),
         navController = navHostState,
-        startDestination = Screen.OnBoarding.route
+//        startDestination = Screen.OnBoarding.route
+        startDestination = Screen.Scanner.route
     ) {
         composable(Screen.OnBoarding.route) {
             OnBoardingView(
