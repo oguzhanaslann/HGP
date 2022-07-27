@@ -1,12 +1,18 @@
 package com.oguzhanaslann.camera
 
 import android.content.Context
+import android.util.Log
+import androidx.camera.core.Camera
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.Preview
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
+import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.gestures.detectTransformGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,12 +20,12 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.IconToggleButton
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
@@ -40,9 +46,10 @@ fun CameraView() {
         mutableStateOf(CameraSelector.LENS_FACING_BACK)
     }
 
-//    val isScanningState = remember {
-//        mutableStateOf(true)
-//    }
+    var zoom by remember { mutableStateOf(1f) }
+    val camera = remember {
+        mutableStateOf<Camera?>(null)
+    }
 
     Box(
         modifier = Modifier.fillMaxSize(),
@@ -57,8 +64,12 @@ fun CameraView() {
                     cameraProviderFuture,
                     previewView,
                     cameraSelection.value,
-                    lifecycleOwner
-                )
+                    lifecycleOwner,
+                ) {
+                    camera.value = it
+                }
+
+
                 previewView
             },
             update = { previewView ->
@@ -67,11 +78,14 @@ fun CameraView() {
                     cameraProviderFuture = cameraProviderFuture,
                     previewView = previewView,
                     cameraSelection = cameraSelection.value,
-                    lifecycleOwner = lifecycleOwner
-                )
-
+                    lifecycleOwner = lifecycleOwner,
+                ) {
+                    camera.value = it
+                }
             }
         )
+
+
 
         CameraControlUIView(
             modifier = Modifier
@@ -83,9 +97,12 @@ fun CameraView() {
                     } else {
                         CameraSelector.LENS_FACING_BACK
                     }
+            },
+            onZoom = {
+                zoom *= it
+                camera.value?.cameraControl?.setZoomRatio(zoom)
             }
         )
-
     }
 }
 
@@ -93,6 +110,7 @@ fun CameraView() {
 fun CameraControlUIView(
     modifier: Modifier = Modifier,
     onFlipCamera: () -> Unit = {},
+    onZoom: (Float) -> Unit = {},
 ) {
 
     val isScanningState = remember {
@@ -101,7 +119,25 @@ fun CameraControlUIView(
 
     Box(
         modifier = modifier
-            .fillMaxSize(),
+            .fillMaxSize()
+            .pointerInput(
+                key1 = "camera_control_ui_view_zoom",
+            ) {
+                detectTransformGestures(
+                    onGesture = { centroid: Offset, pan: Offset, zoom: Float, rotation: Float ->
+                        Log.e("TAG", "CameraControlUIView: zoom $zoom ")
+                        onZoom(zoom)
+                    }
+                )
+            }.pointerInput(
+                key1 = "camera_control_ui_view_double_tap",
+            ) {
+                detectTapGestures(
+                    onDoubleTap = {
+                        onFlipCamera()
+                    }
+                )
+            }
     ) {
 
         Column(
@@ -122,7 +158,39 @@ fun CameraControlUIView(
             )
         }
 
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(contentPadding),
+            visible = isScanningState.value.not(),
+            enter = fadeIn() + expandIn(
+                expandFrom = Alignment.Center
+            ),
+            exit = fadeOut() + shrinkOut(
+                shrinkTowards = Alignment.Center
+            ),
+        ) {
+            IconButton(onClick = { /*TODO*/ }) {
+                Icon(
+                    painterResource(id = R.drawable.ic_shutter),
+                    contentDescription = "Shutter"
+                )
+            }
+        }
 
+
+        AnimatedVisibility(
+            modifier = Modifier
+                .align(Alignment.Center),
+            visible = isScanningState.value,
+            enter = fadeIn(),
+            exit = fadeOut(),
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.ic_barcode),
+                contentDescription = "Qr, Barcode Scan Area"
+            )
+        }
     }
 }
 
@@ -131,7 +199,8 @@ private fun bindCameraUseCases(
     cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
     previewView: PreviewView,
     cameraSelection: Int,
-    lifecycleOwner: LifecycleOwner
+    lifecycleOwner: LifecycleOwner,
+    onCameraReady: (Camera) -> Unit = {},
 ) {
     val executor = ContextCompat.getMainExecutor(ctx)
     cameraProviderFuture.addListener({
@@ -144,13 +213,18 @@ private fun bindCameraUseCases(
             .requireLensFacing(cameraSelection)
             .build()
 
+
+        cameraProvider.unbindAll()
+
         runCatching {
-            cameraProvider.unbindAll()
-            cameraProvider.bindToLifecycle(
+
+            val camera = cameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
                 preview
             )
+
+            onCameraReady(camera)
         }
     }, executor)
 }
@@ -191,8 +265,6 @@ fun ScanningEnableSwitchView(
     isScanning: Boolean,
     onScanChanged: (Boolean) -> Unit = {}
 ) {
-
-
     IconToggleButton(
         modifier = modifier,
         checked = isScanning,
