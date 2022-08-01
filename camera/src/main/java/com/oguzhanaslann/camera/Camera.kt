@@ -1,7 +1,11 @@
+@file:Suppress(" FunctionNaming")
+
 package com.oguzhanaslann.camera
 
 import android.content.Context
+import android.net.Uri
 import android.util.Log
+import android.util.Size
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
@@ -33,10 +37,17 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import com.oguzhanaslann.commonui.theme.contentPadding
+import java.io.File
+import java.util.*
+import java.util.concurrent.Executor
 import kotlin.math.abs
 
 @Composable
-fun CameraView() {
+fun CameraView(
+    onScan: (ImageProxy) -> Unit = {},
+    onImageCapture: (Uri?) -> Unit = {},
+    onImageCaptureError: (Exception) -> Unit = {},
+) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
     val cameraProviderFuture = remember { ProcessCameraProvider.getInstance(context) }
@@ -54,6 +65,14 @@ fun CameraView() {
         mutableStateOf<MeteringPointFactory?>(null)
     }
 
+    val isScanningState = remember {
+        mutableStateOf(true)
+    }
+
+    val imageCapture = remember {
+        mutableStateOf<ImageCapture?>(null)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -69,9 +88,11 @@ fun CameraView() {
                     previewView,
                     cameraSelection.value,
                     lifecycleOwner,
-                ) {
-                    camera.value = it
-                }
+                    onCameraReady = { camera.value = it },
+                    isScanning = isScanningState.value,
+                    onImageProxy = onScan,
+                    onImageCapture = { imageCapture.value = it },
+                )
 
                 meteringFactory.value = previewView.meteringPointFactory
                 previewView
@@ -83,9 +104,11 @@ fun CameraView() {
                     previewView = previewView,
                     cameraSelection = cameraSelection.value,
                     lifecycleOwner = lifecycleOwner,
-                ) {
-                    camera.value = it
-                }
+                    onCameraReady = { camera.value = it },
+                    isScanning = isScanningState.value,
+                    onImageProxy = onScan,
+                    onImageCapture = { imageCapture.value = it },
+                )
 
                 meteringFactory.value = previewView.meteringPointFactory
             }
@@ -96,6 +119,10 @@ fun CameraView() {
         CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.TopEnd),
+            isScanning = isScanningState.value,
+            onScanModeChanged = {
+                isScanningState.value = it
+            },
             onFlipCamera = {
                 zoom = 1f
                 flipCameraLens(cameraSelection)
@@ -106,6 +133,26 @@ fun CameraView() {
             },
             onFocusTap = { offset ->
                 focusCameraAt(offset, camera.value, meteringFactory.value)
+            },
+            onImageCaptureClicked = {
+                val executor = ContextCompat.getMainExecutor(context)
+                val outputFileOptions = ImageCapture.OutputFileOptions
+                    .Builder(
+                        File(context.cacheDir, "capture_${UUID.randomUUID()}.jpg")
+                    )
+                    .build()
+                imageCapture.value?.takePicture(
+                    outputFileOptions,
+                    executor,
+                    object : ImageCapture.OnImageSavedCallback {
+                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
+                            onImageCapture(outputFileResults.savedUri)
+                        }
+
+                        override fun onError(exception: ImageCaptureException) {
+                            onImageCaptureError(exception)
+                        }
+                    })
             }
         )
     }
@@ -143,14 +190,13 @@ fun focusCameraAt(
 @Composable
 fun CameraControlUIView(
     modifier: Modifier = Modifier,
+    isScanning: Boolean,
+    onScanModeChanged: (Boolean) -> Unit = {},
     onFlipCamera: () -> Unit = {},
     onZoom: (Float) -> Unit = {},
-    onFocusTap: (Offset) -> Unit = {}
+    onFocusTap: (Offset) -> Unit = {},
+    onImageCaptureClicked: () -> Unit = {}
 ) {
-
-    val isScanningState = remember {
-        mutableStateOf(true)
-    }
 
     Box(
         modifier = modifier
@@ -190,9 +236,9 @@ fun CameraControlUIView(
 
             ScanningEnableSwitchView(
                 modifier = Modifier.padding(top = 8.dp),
-                isScanning = isScanningState.value,
+                isScanning = isScanning,
                 onScanChanged = {
-                    isScanningState.value = it
+                    onScanModeChanged(it)
                 }
             )
         }
@@ -201,7 +247,7 @@ fun CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
                 .padding(contentPadding),
-            visible = isScanningState.value.not(),
+            visible = isScanning.not(),
             enter = fadeIn() + expandIn(
                 expandFrom = Alignment.Center
             ),
@@ -209,7 +255,7 @@ fun CameraControlUIView(
                 shrinkTowards = Alignment.Center
             ),
         ) {
-            IconButton(onClick = { /*TODO*/ }) {
+            IconButton(onClick = onImageCaptureClicked) {
                 Icon(
                     painterResource(id = R.drawable.ic_shutter),
                     contentDescription = "Shutter"
@@ -221,7 +267,7 @@ fun CameraControlUIView(
         AnimatedVisibility(
             modifier = Modifier
                 .align(Alignment.Center),
-            visible = isScanningState.value,
+            visible = isScanning,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {
@@ -233,6 +279,7 @@ fun CameraControlUIView(
     }
 }
 
+@Suppress("LongParameterList")
 private fun bindCameraUseCases(
     ctx: Context,
     cameraProviderFuture: ListenableFuture<ProcessCameraProvider>,
@@ -240,6 +287,9 @@ private fun bindCameraUseCases(
     cameraSelection: Int,
     lifecycleOwner: LifecycleOwner,
     onCameraReady: (Camera) -> Unit = {},
+    isScanning: Boolean = false,
+    onImageProxy: (ImageProxy) -> Unit = {},
+    onImageCapture: (ImageCapture) -> Unit = {}
 ) {
     val executor = ContextCompat.getMainExecutor(ctx)
     cameraProviderFuture.addListener({
@@ -257,16 +307,48 @@ private fun bindCameraUseCases(
 
         runCatching {
 
+            val useCaseGroup = UseCaseGroup.Builder()
+                .addUseCase(preview)
+                .apply {
+                    if (isScanning) {
+                        val imageAnalysis = getImageAnalysis(executor, onImageProxy)
+                        addUseCase(imageAnalysis)
+                    }
+                }
+                .apply {
+                    if (!isScanning) {
+                        val imageCapture = ImageCapture.Builder()
+                            .setTargetAspectRatio(AspectRatio.RATIO_4_3)
+                            .setTargetRotation(previewView.display.rotation)
+                            .build()
+
+                        onImageCapture(imageCapture)
+                        addUseCase(imageCapture)
+                    }
+                }
+                .build()
+
             val camera = cameraProvider.bindToLifecycle(
                 lifecycleOwner,
                 cameraSelector,
-                preview
+                useCaseGroup
             )
 
             onCameraReady(camera)
         }
     }, executor)
 
+}
+
+fun getImageAnalysis(
+    executor: Executor,
+    onImageProxy: (ImageProxy) -> Unit = {},
+): ImageAnalysis = with(ImageAnalysis.Builder()) {
+    setTargetResolution(Size(640, 480))
+    setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+    build()
+}.apply {
+    setAnalyzer(executor) { proxy -> onImageProxy(proxy) }
 }
 
 @Composable
