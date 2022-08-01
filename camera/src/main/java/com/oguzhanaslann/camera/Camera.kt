@@ -2,9 +2,7 @@ package com.oguzhanaslann.camera
 
 import android.content.Context
 import android.util.Log
-import androidx.camera.core.Camera
-import androidx.camera.core.CameraSelector
-import androidx.camera.core.Preview
+import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
 import androidx.compose.animation.*
@@ -35,6 +33,7 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import com.google.common.util.concurrent.ListenableFuture
 import com.oguzhanaslann.commonui.theme.contentPadding
+import kotlin.math.abs
 
 @Composable
 fun CameraView() {
@@ -51,6 +50,10 @@ fun CameraView() {
         mutableStateOf<Camera?>(null)
     }
 
+    val meteringFactory = remember {
+        mutableStateOf<MeteringPointFactory?>(null)
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -59,6 +62,7 @@ fun CameraView() {
             modifier = Modifier.fillMaxSize(),
             factory = { ctx ->
                 val previewView = PreviewView(ctx)
+                previewView.meteringPointFactory
                 bindCameraUseCases(
                     ctx,
                     cameraProviderFuture,
@@ -69,7 +73,7 @@ fun CameraView() {
                     camera.value = it
                 }
 
-
+                meteringFactory.value = previewView.meteringPointFactory
                 previewView
             },
             update = { previewView ->
@@ -82,6 +86,8 @@ fun CameraView() {
                 ) {
                     camera.value = it
                 }
+
+                meteringFactory.value = previewView.meteringPointFactory
             }
         )
 
@@ -91,18 +97,46 @@ fun CameraView() {
             modifier = Modifier
                 .align(Alignment.TopEnd),
             onFlipCamera = {
-                cameraSelection.value =
-                    if (cameraSelection.value == CameraSelector.LENS_FACING_BACK) {
-                        CameraSelector.LENS_FACING_FRONT
-                    } else {
-                        CameraSelector.LENS_FACING_BACK
-                    }
+                zoom = 1f
+                flipCameraLens(cameraSelection)
             },
             onZoom = {
-                zoom *= it
-                camera.value?.cameraControl?.setZoomRatio(zoom)
+                zoom *= abs(it)
+                updateCameraZoom(zoom, camera)
+            },
+            onFocusTap = { offset ->
+                focusCameraAt(offset, camera.value, meteringFactory.value)
             }
         )
+    }
+
+}
+
+private fun flipCameraLens(cameraSelection: MutableState<Int>) {
+    cameraSelection.value =
+        if (cameraSelection.value == CameraSelector.LENS_FACING_BACK) {
+            CameraSelector.LENS_FACING_FRONT
+        } else {
+            CameraSelector.LENS_FACING_BACK
+        }
+}
+
+private fun updateCameraZoom(
+    zoom: Float,
+    camera: MutableState<Camera?>
+) {
+    camera.value?.cameraControl?.setZoomRatio(zoom)
+}
+
+fun focusCameraAt(
+    offset: Offset,
+    camera: Camera?,
+    meteringFactory: MeteringPointFactory?
+) {
+    meteringFactory?.let {
+        val point = it.createPoint(offset.x, offset.y)
+        val action = FocusMeteringAction.Builder(point).build()
+        camera?.cameraControl?.startFocusAndMetering(action)
     }
 }
 
@@ -111,6 +145,7 @@ fun CameraControlUIView(
     modifier: Modifier = Modifier,
     onFlipCamera: () -> Unit = {},
     onZoom: (Float) -> Unit = {},
+    onFocusTap: (Offset) -> Unit = {}
 ) {
 
     val isScanningState = remember {
@@ -129,12 +164,16 @@ fun CameraControlUIView(
                         onZoom(zoom)
                     }
                 )
-            }.pointerInput(
+            }
+            .pointerInput(
                 key1 = "camera_control_ui_view_double_tap",
             ) {
                 detectTapGestures(
                     onDoubleTap = {
                         onFlipCamera()
+                    },
+                    onTap = {
+                        onFocusTap(it)
                     }
                 )
             }
@@ -227,6 +266,7 @@ private fun bindCameraUseCases(
             onCameraReady(camera)
         }
     }, executor)
+
 }
 
 @Composable
