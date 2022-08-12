@@ -7,7 +7,7 @@ versions.core_ktx = '1.8.0'
 versions.nav_version = "2.5.0"
 versions.appcompat_version = "1.4.2"
 versions.accomplish = "0.24.13-rc"
-
+versions.material_version = "1.6.1"
 ext.versions = versions
 
 def buildVersions = [:]

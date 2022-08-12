@@ -58,7 +58,7 @@ dependencies {
 
     implementation "androidx.core:core-ktx:$versions.core_ktx"
 
-    implementation 'androidx.core:core-splashscreen:1.0.0-rc01'
+    implementation 'androidx.core:core-splashscreen:1.0.0'
 
     implementation "com.google.dagger:hilt-android:$versions.hilt_version"
     kapt "com.google.dagger:hilt-compiler:$versions.hilt_version"

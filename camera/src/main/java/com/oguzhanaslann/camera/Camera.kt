@@ -44,6 +44,7 @@ import kotlin.math.abs
 
 @Composable
 fun CameraView(
+    modifier: Modifier = Modifier,
     onScan: (ImageProxy) -> Unit = {},
     onImageCapture: (Uri?) -> Unit = {},
     onImageCaptureError: (Exception) -> Unit = {},
@@ -74,7 +75,9 @@ fun CameraView(
     }
 
     Box(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .then(modifier),
     ) {
 
         AndroidView(

@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.oguzhanaslann.camera.CameraView
+import com.oguzhanaslann.camera.ScanView
 import com.oguzhanaslann.hgp.MainViewModel
 import com.oguzhanaslann.navigation.ComposeNavigator
 import com.oguzhanaslann.navigation.Screen
@@ -87,7 +88,7 @@ fun MainView(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colors.background
             ) {
-                CameraView()
+                ScanView()
             }
         }
     }
