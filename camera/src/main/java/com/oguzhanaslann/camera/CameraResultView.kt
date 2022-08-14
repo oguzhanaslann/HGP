@@ -19,9 +19,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.oguzhanaslann.commonui.GreennessProgress
 import com.oguzhanaslann.commonui.GreennessProgressbar
-import com.oguzhanaslann.commonui.SheapableImageView
+import com.oguzhanaslann.commonui.ShapeableImageView
 import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
-import com.oguzhanaslann.commonui.theme.black
 import com.oguzhanaslann.commonui.theme.contentPadding
 import com.oguzhanaslann.commonui.theme.largeContentPadding
 
@@ -90,7 +89,7 @@ fun CameraResultView(
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
 
-                SheapableImageView(
+                ShapeableImageView(
                     url = productScanResult.productImage,
                     modifier = Modifier.size(100.dp),
                     shape = CircleShape,

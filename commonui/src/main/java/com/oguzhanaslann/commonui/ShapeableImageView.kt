@@ -12,7 +12,7 @@ import androidx.compose.ui.layout.ContentScale
 import coil.compose.AsyncImage
 
 @Composable
-fun SheapableImageView(
+fun ShapeableImageView(
     modifier: Modifier = Modifier,
     painter: Painter? = null,
     shape: Shape = MaterialTheme.shapes.small,
@@ -37,7 +37,7 @@ fun SheapableImageView(
 
 
 @Composable
-fun SheapableImageView(
+fun ShapeableImageView(
     url: String ?= null,
     modifier: Modifier = Modifier,
     shape: Shape = MaterialTheme.shapes.small,

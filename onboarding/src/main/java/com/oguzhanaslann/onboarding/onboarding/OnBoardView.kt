@@ -199,7 +199,7 @@ private fun StopReadingBrochureView() {
 private fun ScanQrView() {
     OnboardPageView {
         Image(
-            painter = painterResource(id = R.drawable.ic_capture),
+            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_capture),
             contentDescription = null
         )
         OnBoardTitle(

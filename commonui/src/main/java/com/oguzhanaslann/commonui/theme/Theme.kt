@@ -83,6 +83,17 @@ val LocalBlurColorsComposer = staticCompositionLocalOf {
     )
 }
 
+@Immutable
+data class SurfaceBorderColors(
+    val surfaceBorder: Color,
+)
+
+val LocalSurfaceBorderColors = staticCompositionLocalOf {
+    SurfaceBorderColors(
+        surfaceBorder = Color.Unspecified,
+    )
+}
+
 @Composable
 fun HGPTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable () -> Unit) {
     val colors = if (darkTheme) {
@@ -109,9 +120,14 @@ fun HGPTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable ()
         onBlur = white
     )
 
+    val surfaceBorderColors = SurfaceBorderColors(
+        surfaceBorder = Color(0xFF708F85)
+    )
+
     CompositionLocalProvider(
         LocalProgressColors provides progressColors,
-        LocalBlurColorsComposer provides blurColors
+        LocalBlurColorsComposer provides blurColors,
+        LocalSurfaceBorderColors provides surfaceBorderColors
     ) {
         MaterialTheme(
             colors = colors,
@@ -131,4 +147,8 @@ object HGPExtendedTheme {
     val blurColors: LocalBlurColors
         @Composable
         get() = LocalBlurColorsComposer.current
+
+    val surfaceBorderColors: SurfaceBorderColors
+        @Composable
+        get() = LocalSurfaceBorderColors.current
 }

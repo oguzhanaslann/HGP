@@ -1,18 +1,20 @@
 package com.oguzhanaslann.camera
 
+import android.net.Uri
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.oguzhanaslann.commonui.LoadingView
+import kotlinx.coroutines.delay
 
 @Composable
 fun ScanView(
     isLoading: Boolean = false
 ) {
 
-    var scanState by remember { mutableStateOf(ScanState.Scanned ) }
+    var scanState by remember { mutableStateOf<ScanState>(ScanState.Idle) }
 
     Box(
         modifier = Modifier.fillMaxSize()
@@ -24,6 +26,7 @@ fun ScanView(
             },
             onImageCapture = {
                 // google Ml kit image scan
+                scanState = ScanState.ImagePreview(it)
             },
 
             onImageCaptureError = {
@@ -53,15 +56,23 @@ fun ScanView(
                     scanState = ScanState.Idle
                 }
             )
-            ScanState.ImageScanned -> TODO()
+            is ScanState.ImagePreview -> ImagePreviewView(
+                previewUri = (scanState as ScanState.ImagePreview).uri.toString(),
+                onCancel = {
+                    scanState = ScanState.Idle
+                },
+                onAnalyzeClick = {
+                    scanState = ScanState.Idle
+                }
+            )
         }
 
     }
 }
 
-enum class ScanState {
-    Scanning,
-    Scanned,
-    ImageScanned,
-    Idle
+sealed class ScanState {
+   object Scanning : ScanState()
+   object Scanned : ScanState()
+   data class ImagePreview(val uri : Uri?) : ScanState()
+   object Idle : ScanState()
 }
