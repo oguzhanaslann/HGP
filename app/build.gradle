@@ -49,9 +49,15 @@ android {
     }
 }
 
+kapt {
+    generateStubs = true
+    correctErrorTypes = true
+}
+
 dependencies {
 
     implementation project(":commonui")
+    implementation project(":common")
     implementation project(":onboarding")
     implementation project(":navigation")
     implementation project(":camera")
