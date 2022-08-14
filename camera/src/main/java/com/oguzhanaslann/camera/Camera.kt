@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.common.util.concurrent.ListenableFuture
 import com.oguzhanaslann.commonui.theme.contentPadding
 import java.io.File
@@ -45,9 +46,7 @@ import kotlin.math.abs
 @Composable
 fun CameraView(
     modifier: Modifier = Modifier,
-    onScan: (ImageProxy) -> Unit = {},
-    onImageCapture: (Uri?) -> Unit = {},
-    onImageCaptureError: (Exception) -> Unit = {},
+    cameraViewModel: CameraViewModel  = viewModel(),
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -93,7 +92,7 @@ fun CameraView(
                     lifecycleOwner,
                     onCameraReady = { camera.value = it },
                     isScanning = isScanningState.value,
-                    onImageProxy = onScan,
+                    onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { imageCapture.value = it },
                 )
 
@@ -109,7 +108,7 @@ fun CameraView(
                     lifecycleOwner = lifecycleOwner,
                     onCameraReady = { camera.value = it },
                     isScanning = isScanningState.value,
-                    onImageProxy = onScan,
+                    onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { imageCapture.value = it },
                 )
 
@@ -138,6 +137,7 @@ fun CameraView(
                 focusCameraAt(offset, camera.value, meteringFactory.value)
             },
             onImageCaptureClicked = {
+                cameraViewModel.onImageCapturing()
                 val executor = ContextCompat.getMainExecutor(context)
                 val outputFileOptions = ImageCapture.OutputFileOptions
                     .Builder(
@@ -148,12 +148,13 @@ fun CameraView(
                     outputFileOptions,
                     executor,
                     object : ImageCapture.OnImageSavedCallback {
+
                         override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                            onImageCapture(outputFileResults.savedUri)
+                            cameraViewModel.onImageCapture(outputFileResults.savedUri)
                         }
 
                         override fun onError(exception: ImageCaptureException) {
-                            onImageCaptureError(exception)
+                            cameraViewModel.onImageCaptureError(exception)
                         }
                     })
             }

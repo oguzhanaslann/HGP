@@ -15,6 +15,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.oguzhanaslann.camera.CameraView
+import com.oguzhanaslann.camera.CameraViewModel
 import com.oguzhanaslann.camera.ScanView
 import com.oguzhanaslann.hgp.MainViewModel
 import com.oguzhanaslann.navigation.ComposeNavigator
@@ -88,13 +89,9 @@ fun MainView(
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colors.background
             ) {
-                ScanView()
+                val cameraViewModel : CameraViewModel= viewModel()
+                ScanView(cameraViewModel)
             }
         }
     }
-}
-
-@Composable
-fun Greeting(name: String) {
-    Text(text = "Hello $name!")
 }
