@@ -127,7 +127,7 @@ fun HGPTheme(darkTheme: Boolean = isSystemInDarkTheme(), content: @Composable ()
     CompositionLocalProvider(
         LocalProgressColors provides progressColors,
         LocalBlurColorsComposer provides blurColors,
-        LocalSurfaceBorderColors provides surfaceBorderColors
+        LocalSurfaceBorderColors provides surfaceBorderColors,
     ) {
         MaterialTheme(
             colors = colors,

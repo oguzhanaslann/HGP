@@ -7,7 +7,7 @@ sealed class Screen(
     val navArguments: List<NamedNavArgument> = emptyList()
 ) {
     object OnBoarding : Screen("${ROUTE_PREFIX}_onboarding")
-    object Scanner : Screen("${ROUTE_PREFIX}_scanner")
+    object MainContent : Screen("${ROUTE_PREFIX}_main_content")
 
     companion object {
         // route prefix

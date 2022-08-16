@@ -61,6 +61,7 @@ dependencies {
     implementation project(":onboarding")
     implementation project(":navigation")
     implementation project(":camera")
+    implementation project(":voice")
 
     implementation "androidx.core:core-ktx:$versions.core_ktx"
 

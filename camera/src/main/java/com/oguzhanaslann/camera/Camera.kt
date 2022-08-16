@@ -65,14 +65,6 @@ fun CameraView(
         mutableStateOf<MeteringPointFactory?>(null)
     }
 
-    val isScanningState = remember {
-        mutableStateOf(true)
-    }
-
-    val imageCapture = remember {
-        mutableStateOf<ImageCapture?>(null)
-    }
-
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -91,9 +83,9 @@ fun CameraView(
                     cameraSelection.value,
                     lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = isScanningState.value,
+                    isScanning = cameraViewModel.getScanType() == ScanType.QR,
                     onImageProxy = cameraViewModel::onScan,
-                    onImageCapture = { imageCapture.value = it },
+                    onImageCapture = { cameraViewModel.imageCapture  = it },
                 )
 
                 meteringFactory.value = previewView.meteringPointFactory
@@ -107,23 +99,25 @@ fun CameraView(
                     cameraSelection = cameraSelection.value,
                     lifecycleOwner = lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = isScanningState.value,
+                    isScanning = cameraViewModel.getScanType() == ScanType.QR,
                     onImageProxy = cameraViewModel::onScan,
-                    onImageCapture = { imageCapture.value = it },
+                    onImageCapture = { cameraViewModel.imageCapture = it },
                 )
 
                 meteringFactory.value = previewView.meteringPointFactory
             }
         )
 
-
-
         CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.TopEnd),
-            isScanning = isScanningState.value,
+            isScanning = cameraViewModel.getScanType() == ScanType.QR,
             onScanModeChanged = {
-                isScanningState.value = it
+                if (it) {
+                    cameraViewModel.setScanType(ScanType.QR)
+                } else {
+                    cameraViewModel.setScanType(ScanType.Image)
+                }
             },
             onFlipCamera = {
                 zoom = 1f
@@ -137,14 +131,13 @@ fun CameraView(
                 focusCameraAt(offset, camera.value, meteringFactory.value)
             },
             onImageCaptureClicked = {
-                cameraViewModel.onImageCapturing()
                 val executor = ContextCompat.getMainExecutor(context)
                 val outputFileOptions = ImageCapture.OutputFileOptions
                     .Builder(
                         File(context.cacheDir, "capture_${UUID.randomUUID()}.jpg")
                     )
                     .build()
-                imageCapture.value?.takePicture(
+                cameraViewModel.imageCapture?.takePicture(
                     outputFileOptions,
                     executor,
                     object : ImageCapture.OnImageSavedCallback {
@@ -210,7 +203,6 @@ fun CameraControlUIView(
             ) {
                 detectTransformGestures(
                     onGesture = { centroid: Offset, pan: Offset, zoom: Float, rotation: Float ->
-                        Log.e("TAG", "CameraControlUIView: zoom $zoom ")
                         onZoom(zoom)
                     }
                 )

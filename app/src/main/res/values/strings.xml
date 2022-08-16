@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">HGP</string>
+    <string name="menu_button_description">Menu Button</string>
+    <string name="search_button_description">Search Button</string>
 </resources>
