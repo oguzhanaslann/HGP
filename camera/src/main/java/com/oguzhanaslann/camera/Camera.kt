@@ -3,15 +3,15 @@
 package com.oguzhanaslann.camera
 
 import android.content.Context
-import android.net.Uri
-import android.util.Log
 import android.util.Size
 import androidx.camera.core.*
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.view.PreviewView
-import androidx.compose.animation.*
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.gestures.detectTransformGestures
@@ -37,16 +37,16 @@ import androidx.core.content.ContextCompat
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.common.util.concurrent.ListenableFuture
+import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.theme.contentPadding
-import java.io.File
-import java.util.*
 import java.util.concurrent.Executor
 import kotlin.math.abs
 
 @Composable
 fun CameraView(
     modifier: Modifier = Modifier,
-    cameraViewModel: CameraViewModel  = viewModel(),
+    cameraViewModel: CameraViewModel = viewModel(),
+    onScanModeChanged: (SearchType.CameraSearch) -> Unit
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -83,9 +83,9 @@ fun CameraView(
                     cameraSelection.value,
                     lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraViewModel.getScanType() == ScanType.QR,
+                    isScanning = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
                     onImageProxy = cameraViewModel::onScan,
-                    onImageCapture = { cameraViewModel.imageCapture  = it },
+                    onImageCapture = { cameraViewModel.imageCapture = it },
                 )
 
                 meteringFactory.value = previewView.meteringPointFactory
@@ -99,7 +99,7 @@ fun CameraView(
                     cameraSelection = cameraSelection.value,
                     lifecycleOwner = lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraViewModel.getScanType() == ScanType.QR,
+                    isScanning = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
                     onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { cameraViewModel.imageCapture = it },
                 )
@@ -111,12 +111,12 @@ fun CameraView(
         CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.TopEnd),
-            isScanning = cameraViewModel.getScanType() == ScanType.QR,
+            isScanMode = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
             onScanModeChanged = {
                 if (it) {
-                    cameraViewModel.setScanType(ScanType.QR)
+                    onScanModeChanged(SearchType.CameraSearch.QRScanSearch)
                 } else {
-                    cameraViewModel.setScanType(ScanType.Image)
+                    onScanModeChanged(SearchType.CameraSearch.ImageSearch)
                 }
             },
             onFlipCamera = {
@@ -129,27 +129,6 @@ fun CameraView(
             },
             onFocusTap = { offset ->
                 focusCameraAt(offset, camera.value, meteringFactory.value)
-            },
-            onImageCaptureClicked = {
-                val executor = ContextCompat.getMainExecutor(context)
-                val outputFileOptions = ImageCapture.OutputFileOptions
-                    .Builder(
-                        File(context.cacheDir, "capture_${UUID.randomUUID()}.jpg")
-                    )
-                    .build()
-                cameraViewModel.imageCapture?.takePicture(
-                    outputFileOptions,
-                    executor,
-                    object : ImageCapture.OnImageSavedCallback {
-
-                        override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                            cameraViewModel.onImageCapture(outputFileResults.savedUri)
-                        }
-
-                        override fun onError(exception: ImageCaptureException) {
-                            cameraViewModel.onImageCaptureError(exception)
-                        }
-                    })
             }
         )
     }
@@ -187,12 +166,11 @@ fun focusCameraAt(
 @Composable
 fun CameraControlUIView(
     modifier: Modifier = Modifier,
-    isScanning: Boolean,
+    isScanMode: Boolean,
     onScanModeChanged: (Boolean) -> Unit = {},
     onFlipCamera: () -> Unit = {},
     onZoom: (Float) -> Unit = {},
-    onFocusTap: (Offset) -> Unit = {},
-    onImageCaptureClicked: () -> Unit = {}
+    onFocusTap: (Offset) -> Unit = {}
 ) {
 
     Box(
@@ -232,7 +210,7 @@ fun CameraControlUIView(
 
             ScanningEnableSwitchView(
                 modifier = Modifier.padding(top = 8.dp),
-                isScanning = isScanning,
+                isScanning = isScanMode,
                 onScanChanged = {
                     onScanModeChanged(it)
                 }
@@ -241,29 +219,8 @@ fun CameraControlUIView(
 
         AnimatedVisibility(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(contentPadding),
-            visible = isScanning.not(),
-            enter = fadeIn() + expandIn(
-                expandFrom = Alignment.Center
-            ),
-            exit = fadeOut() + shrinkOut(
-                shrinkTowards = Alignment.Center
-            ),
-        ) {
-            IconButton(onClick = onImageCaptureClicked) {
-                Icon(
-                    painterResource(id = R.drawable.ic_shutter),
-                    contentDescription = "Shutter"
-                )
-            }
-        }
-
-
-        AnimatedVisibility(
-            modifier = Modifier
                 .align(Alignment.Center),
-            visible = isScanning,
+            visible = isScanMode,
             enter = fadeIn(),
             exit = fadeOut(),
         ) {

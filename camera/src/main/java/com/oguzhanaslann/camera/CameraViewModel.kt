@@ -1,14 +1,15 @@
 package com.oguzhanaslann.camera
 
 import android.net.Uri
+import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.camera.core.ImageProxy
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.oguzhanaslann.common.SearchType
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
@@ -20,14 +21,14 @@ class CameraViewModel @Inject constructor(
 
     var imageCapture by  mutableStateOf<ImageCapture?>(null)
 
-    private  val scanType =  mutableStateOf(ScanType.QR)
+    private  val scanType =  mutableStateOf<SearchType.CameraSearch>(SearchType.CameraSearch.QRScanSearch)
 
-    fun setScanType(scanType: ScanType) {
+    fun setScanType(scanType: SearchType.CameraSearch) {
         imageCapture = null // reset image capture
         this.scanType.value = scanType
     }
 
-    fun getScanType(): ScanType {
+    fun getScanType(): SearchType.CameraSearch {
         return scanType.value
     }
 
@@ -54,9 +55,12 @@ class CameraViewModel @Inject constructor(
     fun onScan(imageProxy: ImageProxy) {
 //        scanState = ScanState.Scanning
     }
-
-
 }
-enum class ScanType {
-    QR, Image
+
+
+sealed class ScanState {
+    object Idle : ScanState()
+    object Scanning : ScanState()
+    data class Scanned(val productScanResult: ProductScanResult) : ScanState()
+    data class ImagePreview(val uri: Uri?) : ScanState()
 }

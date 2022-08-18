@@ -10,11 +10,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.LoadingView
 
 @Composable
 fun ScanView(
-    cameraViewModel: CameraViewModel = viewModel()
+    cameraViewModel: CameraViewModel = viewModel(),
+    onScanModeChanged : (SearchType.CameraSearch) -> Unit
 ) {
 
     Box(
@@ -22,7 +24,8 @@ fun ScanView(
     ) {
         CameraView(
             modifier = Modifier.align(Alignment.Center),
-            cameraViewModel = cameraViewModel
+            cameraViewModel = cameraViewModel,
+            onScanModeChanged = onScanModeChanged
         )
 
         when (cameraViewModel.scanState) {
@@ -48,11 +51,4 @@ fun ScanView(
         }
 
     }
-}
-
-sealed class ScanState {
-    object Idle : ScanState()
-    object Scanning : ScanState()
-    data class Scanned(val productScanResult: ProductScanResult) : ScanState()
-    data class ImagePreview(val uri: Uri?) : ScanState()
 }
