@@ -12,7 +12,7 @@ import androidx.compose.ui.graphics.Color
 
 private val DarkColorPalette = darkColors(
     primary = spanishGreen,
-    primaryVariant = spanishGreen,
+    primaryVariant = xanadu,
     secondary = bronze,
     secondaryVariant = bronze,
     background = arsenic,
@@ -27,7 +27,7 @@ private val DarkColorPalette = darkColors(
 
 private val LightColorPalette = lightColors(
     primary = spanishGreen,
-    primaryVariant = spanishGreen,
+    primaryVariant = xanadu,
     secondary = bronze,
     secondaryVariant = bronze,
     background = lotion,

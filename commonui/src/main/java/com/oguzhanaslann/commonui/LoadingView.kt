@@ -1,21 +1,30 @@
 package com.oguzhanaslann.commonui
 
-import androidx.annotation.RawRes
+import androidx.annotation.FloatRange
+import androidx.annotation.IntRange
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
+import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
+import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import com.airbnb.lottie.compose.*
+import com.airbnb.lottie.compose.LottieConstants
 import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
 import com.oguzhanaslann.commonui.theme.LocalBlurColors
-import com.oguzhanaslann.commonui.theme.black
 
 
 @Composable
@@ -27,66 +36,81 @@ fun LoadingView(
     blurColors: LocalBlurColors = HGPExtendedTheme.blurColors
 ) {
 
-    Surface(
-        color = blurColors.blur,
-    ) {
+    Blur(blurColors = blurColors) {
         Box(modifier = modifier.fillMaxSize()) {
-            LoadingAnimation(
-                modifier = Modifier.align(Alignment.Center),
+            LottieAnimationView(
+                modifier = Modifier
+                    .size(124.dp)
+                    .align(Alignment.Center),
                 iterations = iterations,
                 isPlaying = isPlaying,
-                restartOnPlay = restartOnPlay
+                restartOnPlay = restartOnPlay,
+                animation = R.raw.loading_lottie,
             )
         }
     }
 }
 
 @Composable
-fun LoadingAnimation(
+fun Blur(
     modifier: Modifier = Modifier,
-    @RawRes animation: Int = R.raw.loading_lottie,
-    iterations: Int = LottieConstants.IterateForever,
-    isPlaying: Boolean = true,
-    restartOnPlay: Boolean = false,
+    shape: Shape = RectangleShape,
+    blurColors: LocalBlurColors = HGPExtendedTheme.blurColors,
+    border: BorderStroke? = null,
+    elevation: Dp = 0.dp,
+    content: @Composable () -> Unit
 ) {
-
-    val speed by remember {
-        mutableStateOf(1f)
+    Surface(
+        modifier = modifier,
+        color = blurColors.blur,
+        shape = shape,
+        border = border,
+        elevation = elevation
+    ) {
+        content()
     }
+}
 
-    val composition by rememberLottieComposition(
-        LottieCompositionSpec.RawRes(animation)
+
+@Composable
+fun Pulsating(
+    modifier : Modifier= Modifier,
+    pulseFraction: Float = 1.5f,
+    content: @Composable () -> Unit
+) {
+    val infiniteTransition = rememberInfiniteTransition()
+
+    val animation = tween<Float>(1500)
+    val repeatMode = RepeatMode.Restart
+    val initialValue = 1f
+
+
+    val scale by infiniteTransition.animateFloat(
+        initialValue = initialValue,
+        targetValue = pulseFraction,
+        animationSpec = infiniteRepeatable(
+            animation = animation,
+            repeatMode = repeatMode
+        )
     )
 
-    val progress by animateLottieCompositionAsState(
-        // pass the composition created above
-        composition,
-
-        // Iterates Forever
-        iterations = iterations,
-
-        // pass isPlaying we created above,
-        // changing isPlaying will recompose
-        // Lottie and pause/play
-        isPlaying = isPlaying,
-
-        // pass speed we created above,
-        // changing speed will increase Lottie
-        speed = speed,
-
-        // this makes animation to restart
-        // when paused and play
-        // pass false to continue the animation
-        // at which is was paused
-        restartOnPlay = restartOnPlay
-
+    val alpha by infiniteTransition.animateFloat(
+        initialValue = initialValue,
+        targetValue =  0.0f,
+        animationSpec = infiniteRepeatable(
+            animation = animation,
+            repeatMode = repeatMode
+        )
     )
 
-    LottieAnimation(
-        modifier = Modifier
-            .size(124.dp)
-            .then(modifier),
-        composition = composition,
-        progress = progress
-    )
+    Box(modifier = modifier
+        .scale(scale)
+        .alpha(alpha)
+    ) {
+        Column(
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            content()
+        }
+    }
 }
