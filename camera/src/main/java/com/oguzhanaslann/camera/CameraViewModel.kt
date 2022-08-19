@@ -14,23 +14,10 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 
 @HiltViewModel
-class CameraViewModel @Inject constructor(
-
-) : ViewModel() {
+class CameraViewModel @Inject constructor() : ViewModel() {
     var scanState by mutableStateOf<ScanState>(ScanState.Idle)
 
     var imageCapture by  mutableStateOf<ImageCapture?>(null)
-
-    private  val scanType =  mutableStateOf<SearchType.CameraSearch>(SearchType.CameraSearch.QRScanSearch)
-
-    fun setScanType(scanType: SearchType.CameraSearch) {
-        imageCapture = null // reset image capture
-        this.scanType.value = scanType
-    }
-
-    fun getScanType(): SearchType.CameraSearch {
-        return scanType.value
-    }
 
     fun onImageCapturing() {
         scanState = ScanState.Scanning

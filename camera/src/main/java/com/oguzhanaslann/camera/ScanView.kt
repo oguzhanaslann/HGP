@@ -1,14 +1,10 @@
 package com.oguzhanaslann.camera
 
-import android.net.Uri
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.LoadingView
@@ -16,7 +12,8 @@ import com.oguzhanaslann.commonui.LoadingView
 @Composable
 fun ScanView(
     cameraViewModel: CameraViewModel = viewModel(),
-    onScanModeChanged : (SearchType.CameraSearch) -> Unit
+    cameraSearchType: SearchType.CameraSearch = SearchType.CameraSearch.QRScanSearch,
+    onScanModeChanged: (SearchType.CameraSearch) -> Unit
 ) {
 
     Box(
@@ -25,6 +22,7 @@ fun ScanView(
         CameraView(
             modifier = Modifier.align(Alignment.Center),
             cameraViewModel = cameraViewModel,
+            cameraSearchType = cameraSearchType,
             onScanModeChanged = onScanModeChanged
         )
 

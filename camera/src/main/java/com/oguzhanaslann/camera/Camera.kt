@@ -45,6 +45,7 @@ import kotlin.math.abs
 @Composable
 fun CameraView(
     modifier: Modifier = Modifier,
+    cameraSearchType: SearchType.CameraSearch,
     cameraViewModel: CameraViewModel = viewModel(),
     onScanModeChanged: (SearchType.CameraSearch) -> Unit
 ) {
@@ -83,7 +84,7 @@ fun CameraView(
                     cameraSelection.value,
                     lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
+                    isScanning = cameraSearchType.isQRScanSearch(),
                     onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { cameraViewModel.imageCapture = it },
                 )
@@ -99,7 +100,7 @@ fun CameraView(
                     cameraSelection = cameraSelection.value,
                     lifecycleOwner = lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
+                    isScanning = cameraSearchType.isQRScanSearch(),
                     onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { cameraViewModel.imageCapture = it },
                 )
@@ -111,7 +112,7 @@ fun CameraView(
         CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.TopEnd),
-            isScanMode = cameraViewModel.getScanType() == SearchType.CameraSearch.QRScanSearch,
+            isScanMode = cameraSearchType.isQRScanSearch(),
             onScanModeChanged = {
                 if (it) {
                     onScanModeChanged(SearchType.CameraSearch.QRScanSearch)
@@ -319,9 +320,7 @@ private fun FlipCameraView(
 
     IconButton(
         modifier = modifier
-            .graphicsLayer(
-                rotationZ = animation.value,
-            ),
+            .graphicsLayer(rotationZ = animation.value),
         onClick = {
             animationState.value = !animationState.value
             onFlipClicked()

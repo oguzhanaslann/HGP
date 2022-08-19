@@ -1,10 +1,12 @@
 package com.oguzhanaslann.hgp.ui.main
 
+import android.util.Log
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.*
@@ -36,10 +38,13 @@ import com.oguzhanaslann.commonui.theme.*
 import com.oguzhanaslann.commonui.toggle
 import com.oguzhanaslann.hgp.R
 import com.oguzhanaslann.navigation.MainContentScreen
+import com.oguzhanaslann.voice.VoiceView
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
+
+private const val TAG = "MainContentView"
 
 class MainContentState(
     val scope: CoroutineScope,
@@ -52,9 +57,9 @@ class MainContentState(
     init {
         navController.addOnDestinationChangedListener { controller, destination, arguments ->
             when (destination.route) {
-                MainContentScreen.Camera.route -> {
-                    searchType = SearchType.CameraSearch.QRScanSearch
-                }
+                MainContentScreen.Camera.route -> searchType = SearchType.CameraSearch.QRScanSearch
+                MainContentScreen.VoiceSearch.route -> searchType = SearchType.VoiceSearch
+                else -> Log.e(TAG, "Unknown by search type destination: ${destination.route}")
             }
         }
     }
@@ -65,20 +70,32 @@ class MainContentState(
         actionClickListener?.invoke()
     }
 
-    fun startBarcodeScan() {
-        // TODO("Not yet implemented")
+    fun startBarcodeScan(closeDrawer: Boolean = true) {
+        navController.navigate(MainContentScreen.Camera.route)
+        searchType = SearchType.CameraSearch.QRScanSearch
+        closeDrawerBy(closeDrawer)
     }
 
-    fun startVoiceSearch() {
-        // TODO("Not yet implemented")
+    fun startVoiceSearch(closeDrawer: Boolean = true) {
+        navController.navigate(MainContentScreen.VoiceSearch.route)
+        closeDrawerBy(closeDrawer)
     }
 
-    fun startTextSearch() {
+    fun startTextSearch(closeDrawer: Boolean = true) {
         // TODO("Not yet implemented")
+        closeDrawerBy(closeDrawer)
     }
 
-    fun startVisualSearch() {
-        // TODO("Not yet implemented")
+    fun startVisualSearch(closeDrawer: Boolean = true) {
+        navController.navigate(MainContentScreen.Camera.route)
+        searchType = SearchType.CameraSearch.ImageSearch
+        closeDrawerBy(closeDrawer)
+    }
+
+    private fun closeDrawerBy(closeDrawer: Boolean) {
+        if (closeDrawer) {
+            scope.launch { scaffoldState.drawerState.close() }
+        }
     }
 
     fun goToPrivacyPolicy() {
@@ -136,7 +153,7 @@ fun MainContentView(
                 onTextSearchClicked = { state.startTextSearch() },
                 onVisualSearchClicked = { state.startVisualSearch() },
                 onPrivacyPolicyClicked = { state.goToPrivacyPolicy() },
-                onContactUsClicked = {  state.goToContactUs() },
+                onContactUsClicked = { state.goToContactUs() },
                 onShareClicked = { }
             )
         },
@@ -188,11 +205,15 @@ fun MainContentView(
                     }
                     ScanView(
                         cameraViewModel = cameraViewModel,
+                        cameraSearchType = state.searchType as SearchType.CameraSearch,
                         onScanModeChanged = {
                             state.searchType = it
-                            cameraViewModel.setScanType(it)
                         }
                     )
+                }
+
+                composable(MainContentScreen.VoiceSearch.route) {
+                    VoiceView()
                 }
             }
         }
@@ -202,13 +223,13 @@ fun MainContentView(
 @Composable
 fun HGPDrawer(
     modifier: Modifier = Modifier,
-    onBarcodeScanClicked : () -> Unit = {},
-    onVoiceSearchClicked : () -> Unit = {},
-    onTextSearchClicked : () -> Unit = {},
-    onVisualSearchClicked : () -> Unit = {},
-    onPrivacyPolicyClicked : () -> Unit = {},
-    onContactUsClicked : () -> Unit = {},
-    onShareClicked : () -> Unit = {}
+    onBarcodeScanClicked: () -> Unit = {},
+    onVoiceSearchClicked: () -> Unit = {},
+    onTextSearchClicked: () -> Unit = {},
+    onVisualSearchClicked: () -> Unit = {},
+    onPrivacyPolicyClicked: () -> Unit = {},
+    onContactUsClicked: () -> Unit = {},
+    onShareClicked: () -> Unit = {}
 ) {
     Surface(
         modifier = modifier,
@@ -218,95 +239,104 @@ fun HGPDrawer(
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Surface(
-                modifier = Modifier.fillMaxWidth(),
-                color = MaterialTheme.colors.primary
-            ) {
-                Column(
-                    verticalArrangement = Arrangement.Center,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Image(
-                        modifier = Modifier
-                            .size(144.dp)
-                            .padding(top = xlargeContentPadding),
-                        painter = painterResource(id = R.drawable.ic_hgp_logo),
-                        contentDescription = "HGP Logo",
-                    )
+            LazyColumn {
+                item {
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        color = MaterialTheme.colors.primary
+                    ) {
+                        Column(
+                            verticalArrangement = Arrangement.Center,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            Image(
+                                modifier = Modifier
+                                    .size(144.dp)
+                                    .padding(top = xlargeContentPadding),
+                                painter = painterResource(id = R.drawable.ic_hgp_logo),
+                                contentDescription = "HGP Logo",
+                            )
 
-                    Text(
-                        modifier = Modifier.padding(vertical = defaultContentPadding),
-                        text = stringResource(id = R.string.app_name_long),
-                        style = MaterialTheme.typography.subtitle2.copy(fontWeight = FontWeight.Bold)
-                    )
+                            Text(
+                                modifier = Modifier.padding(vertical = defaultContentPadding),
+                                text = stringResource(id = R.string.app_name_long),
+                                style = MaterialTheme.typography.subtitle2.copy(fontWeight = FontWeight.Bold)
+                            )
 
+                        }
+                    }
                 }
-            }
 
-            Column {
+                item {
+                    Column {
 
-                Text(
-                    modifier = Modifier
-                        .padding(top = smallContentPadding)
-                        .padding(horizontal = largeContentPadding),
-                    text = "Search",
-                    style = MaterialTheme.typography.subtitle1,
-                )
+                        Text(
+                            modifier = Modifier
+                                .padding(top = smallContentPadding)
+                                .padding(horizontal = largeContentPadding),
+                            text = "Search",
+                            style = MaterialTheme.typography.subtitle1,
+                        )
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_capture),
-                    text = stringResource(R.string.barcode_scan),
-                    onClick = onBarcodeScanClicked
-                )
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_capture),
+                            text = stringResource(R.string.barcode_scan),
+                            onClick = onBarcodeScanClicked
+                        )
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_microphone),
-                    text = stringResource(R.string.voice_search),
-                    onClick = onVoiceSearchClicked
-                )
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_microphone),
+                            text = stringResource(R.string.voice_search),
+                            onClick = onVoiceSearchClicked
+                        )
 
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_pencil),
-                    text = stringResource(R.string.text_search),
-                    onClick = onTextSearchClicked
-                )
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_pencil),
+                            text = stringResource(R.string.text_search),
+                            onClick = onTextSearchClicked
+                        )
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_camera),
-                    text = stringResource(R.string.visual_search),
-                    onClick =  onVisualSearchClicked
-                )
-            }
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_camera),
+                            text = stringResource(R.string.visual_search),
+                            onClick = onVisualSearchClicked
+                        )
+                    }
+                }
 
-            Divider(modifier = Modifier.fillMaxWidth(0.90f))
 
-            Column {
-                Text(
-                    modifier = Modifier
-                        .padding(top = smallContentPadding)
-                        .padding(horizontal = largeContentPadding),
-                    text = "General",
-                    style = MaterialTheme.typography.subtitle1,
-                )
+                item { Divider(modifier = Modifier.fillMaxWidth(0.90f)) }
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_info),
-                    text = stringResource(R.string.privacy_policy),
-                    onClick = onPrivacyPolicyClicked
-                )
+                item {
+                    Column {
+                        Text(
+                            modifier = Modifier
+                                .padding(top = smallContentPadding)
+                                .padding(horizontal = largeContentPadding),
+                            text = "General",
+                            style = MaterialTheme.typography.subtitle1,
+                        )
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_mail),
-                    text = stringResource(R.string.contact_us),
-                    onClick = onContactUsClicked
-                )
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_info),
+                            text = stringResource(R.string.privacy_policy),
+                            onClick = onPrivacyPolicyClicked
+                        )
 
-                DrawerItem(
-                    painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_social),
-                    text = stringResource(R.string.share),
-                    onClick = onShareClicked
-                )
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_mail),
+                            text = stringResource(R.string.contact_us),
+                            onClick = onContactUsClicked
+                        )
+
+                        DrawerItem(
+                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_social),
+                            text = stringResource(R.string.share),
+                            onClick = onShareClicked
+                        )
+                    }
+                }
             }
         }
     }

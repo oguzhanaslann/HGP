@@ -17,7 +17,8 @@ android {
 
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled shouldMinify
+            shrinkResources shouldShrinkResources
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
@@ -28,10 +29,24 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
+
+    buildFeatures {
+        compose true
+    }
+
+    composeOptions {
+        kotlinCompilerExtensionVersion compose_rc
+    }
+    packagingOptions {
+        resources {
+            excludes += '/META-INF/{AL2.0,LGPL2.1}'
+        }
+    }
 }
 
 dependencies {
     implementation project(':commonui')
+    implementation project(':common')
 
     implementation "androidx.core:core-ktx:$versions.core_ktx"
     testImplementation 'junit:junit:4.13.2'
