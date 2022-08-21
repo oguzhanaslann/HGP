@@ -1,4 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name_long">How Green Product</string>
     <string name="no_result">No Result</string>
+    <string name="menu_button_description">Menu Button</string>
+    <string name="search_button_description">Search Button</string>
+    <string name="barcode_scan">Barcode Scan</string>
+    <string name="voice_search">Voice search</string>
+    <string name="text_search">Text search</string>
+    <string name="visual_search">Visual search</string>
+    <string name="privacy_policy">Privacy Policy</string>
+    <string name="contact_us">Contact us</string>
+    <string name="share">Share</string>
 </resources>

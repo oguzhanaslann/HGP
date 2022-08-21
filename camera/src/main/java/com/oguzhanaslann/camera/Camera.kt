@@ -39,15 +39,15 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.google.common.util.concurrent.ListenableFuture
 import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.theme.contentPadding
+import java.io.File
+import java.util.*
 import java.util.concurrent.Executor
 import kotlin.math.abs
 
 @Composable
 fun CameraView(
     modifier: Modifier = Modifier,
-    cameraSearchType: SearchType.CameraSearch,
-    cameraViewModel: CameraViewModel = viewModel(),
-    onScanModeChanged: (SearchType.CameraSearch) -> Unit
+    cameraViewModel: CameraViewModel = viewModel()
 ) {
     val lifecycleOwner = LocalLifecycleOwner.current
     val context = LocalContext.current
@@ -84,7 +84,7 @@ fun CameraView(
                     cameraSelection.value,
                     lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraSearchType.isQRScanSearch(),
+                    isScanning = cameraViewModel.cameraSearchType.isQRScanSearch(),
                     onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { cameraViewModel.imageCapture = it },
                 )
@@ -100,7 +100,7 @@ fun CameraView(
                     cameraSelection = cameraSelection.value,
                     lifecycleOwner = lifecycleOwner,
                     onCameraReady = { camera.value = it },
-                    isScanning = cameraSearchType.isQRScanSearch(),
+                    isScanning = cameraViewModel.cameraSearchType.isQRScanSearch(),
                     onImageProxy = cameraViewModel::onScan,
                     onImageCapture = { cameraViewModel.imageCapture = it },
                 )
@@ -112,12 +112,12 @@ fun CameraView(
         CameraControlUIView(
             modifier = Modifier
                 .align(Alignment.TopEnd),
-            isScanMode = cameraSearchType.isQRScanSearch(),
+            isScanMode = cameraViewModel.cameraSearchType.isQRScanSearch(),
             onScanModeChanged = {
                 if (it) {
-                    onScanModeChanged(SearchType.CameraSearch.QRScanSearch)
+                    cameraViewModel.cameraSearchType = (SearchType.CameraSearch.QRScanSearch)
                 } else {
-                    onScanModeChanged(SearchType.CameraSearch.ImageSearch)
+                    cameraViewModel.cameraSearchType = (SearchType.CameraSearch.ImageSearch)
                 }
             },
             onFlipCamera = {

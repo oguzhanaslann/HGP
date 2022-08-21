@@ -16,6 +16,7 @@ import javax.inject.Inject
 @HiltViewModel
 class CameraViewModel @Inject constructor() : ViewModel() {
     var scanState by mutableStateOf<ScanState>(ScanState.Idle)
+    var cameraSearchType by mutableStateOf<SearchType.CameraSearch>(SearchType.CameraSearch.QRScanSearch)
 
     var imageCapture by  mutableStateOf<ImageCapture?>(null)
 

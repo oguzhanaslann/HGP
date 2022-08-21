@@ -39,6 +39,7 @@ import com.oguzhanaslann.commonui.toggle
 import com.oguzhanaslann.hgp.R
 import com.oguzhanaslann.navigation.MainContentScreen
 import com.oguzhanaslann.voice.VoiceView
+import com.oguzhanaslann.voice.VoiceViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import java.io.File
@@ -52,27 +53,9 @@ class MainContentState(
     val navController: NavHostController
 ) {
     val startDestination = MainContentScreen.Camera.route
-    var searchType by mutableStateOf<SearchType>(SearchType.CameraSearch.QRScanSearch)
-
-    init {
-        navController.addOnDestinationChangedListener { controller, destination, arguments ->
-            when (destination.route) {
-                MainContentScreen.Camera.route -> searchType = SearchType.CameraSearch.QRScanSearch
-                MainContentScreen.VoiceSearch.route -> searchType = SearchType.VoiceSearch
-                else -> Log.e(TAG, "Unknown by search type destination: ${destination.route}")
-            }
-        }
-    }
-
-    var actionClickListener: (() -> Unit)? = null
-
-    fun onActionClick() {
-        actionClickListener?.invoke()
-    }
 
     fun startBarcodeScan(closeDrawer: Boolean = true) {
         navController.navigate(MainContentScreen.Camera.route)
-        searchType = SearchType.CameraSearch.QRScanSearch
         closeDrawerBy(closeDrawer)
     }
 
@@ -88,7 +71,6 @@ class MainContentState(
 
     fun startVisualSearch(closeDrawer: Boolean = true) {
         navController.navigate(MainContentScreen.Camera.route)
-        searchType = SearchType.CameraSearch.ImageSearch
         closeDrawerBy(closeDrawer)
     }
 
@@ -124,281 +106,57 @@ fun rememberMainContentState(
 @Composable
 fun MainContentView(
     modifier: Modifier = Modifier,
-    state: MainContentState = rememberMainContentState()
+    state: MainContentState = rememberMainContentState(),
 ) {
-    DisposableEffect(key1 = Unit) {
-        object : DisposableEffectResult {
-            override fun dispose() {
-                state.actionClickListener = null
-            }
-        }
-    }
-
-    Scaffold(
-        modifier = modifier,
-        scaffoldState = state.scaffoldState,
-        bottomBar = {
-            HGPBottomAppBar(
-                onDrawerClick = { state.scope.launch { state.scaffoldState.drawerState.toggle() } }
+    NavHost(
+        navController = state.navController,
+        startDestination = state.startDestination,
+        modifier = Modifier.fillMaxSize()
+    ) {
+        composable(MainContentScreen.Camera.route) {
+            val cameraViewModel: CameraViewModel = hiltViewModel()
+            ScanView(
+                cameraViewModel = cameraViewModel,
+                onTextSearchClicked = {
+                    state.startTextSearch()
+                },
+                onVoiceSearchClicked = {
+                    state.startVoiceSearch()
+                },
+                onPrivacyPolicyClicked = {
+                    state.goToPrivacyPolicy()
+                },
+                onContactUsClicked = {
+                    state.goToContactUs()
+                },
+                onShareClicked = {
+                    // TODO("Not yet implemented")
+                }
             )
-        },
-        drawerShape = MaterialTheme.shapes.large.copy(
-            topStart = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp)
-        ),
-        drawerContent = {
-            HGPDrawer(
-                onBarcodeScanClicked = { state.startBarcodeScan() },
-                onVoiceSearchClicked = { state.startVoiceSearch() },
-                onTextSearchClicked = { state.startTextSearch() },
-                onVisualSearchClicked = { state.startVisualSearch() },
-                onPrivacyPolicyClicked = { state.goToPrivacyPolicy() },
-                onContactUsClicked = { state.goToContactUs() },
-                onShareClicked = { }
-            )
-        },
-        floatingActionButton = {
-            when (state.searchType) {
-                is SearchType.CameraSearch.ImageSearch -> {
-                    IconButton(onClick = state::onActionClick) {
-                        Icon(
-                            painterResource(id = com.oguzhanaslann.camera.R.drawable.ic_shutter),
-                            contentDescription = "Shutter",
-                            tint = white
-                        )
-                    }
-                }
-                else -> emptyComposable()
-            }
-        },
-        floatingActionButtonPosition = FabPosition.Center,
-        isFloatingActionButtonDocked = true,
-        content = { values ->
-            NavHost(
-                navController = state.navController,
-                startDestination = state.startDestination,
-                modifier = Modifier.padding(values)
-            ) {
-                composable(MainContentScreen.Camera.route) {
-                    val cameraViewModel: CameraViewModel = hiltViewModel()
-                    val context = LocalContext.current
-                    state.actionClickListener = {
-                        cameraViewModel.onImageCapturing()
-                        val executor = ContextCompat.getMainExecutor(context)
-                        val outputFileOptions = ImageCapture.OutputFileOptions
-                            .Builder(
-                                File(context.cacheDir, "capture_${UUID.randomUUID()}.jpg")
-                            )
-                            .build()
-                        cameraViewModel.imageCapture?.takePicture(
-                            outputFileOptions,
-                            executor,
-                            object : ImageCapture.OnImageSavedCallback {
-                                override fun onImageSaved(outputFileResults: ImageCapture.OutputFileResults) {
-                                    cameraViewModel.onImageCapture(outputFileResults.savedUri)
-                                }
-
-                                override fun onError(exception: ImageCaptureException) {
-                                    cameraViewModel.onImageCaptureError(exception)
-                                }
-                            })
-                    }
-                    ScanView(
-                        cameraViewModel = cameraViewModel,
-                        cameraSearchType = state.searchType as SearchType.CameraSearch,
-                        onScanModeChanged = {
-                            state.searchType = it
-                        }
-                    )
-                }
-
-                composable(MainContentScreen.VoiceSearch.route) {
-                    VoiceView()
-                }
-            }
         }
-    )
-}
 
-@Composable
-fun HGPDrawer(
-    modifier: Modifier = Modifier,
-    onBarcodeScanClicked: () -> Unit = {},
-    onVoiceSearchClicked: () -> Unit = {},
-    onTextSearchClicked: () -> Unit = {},
-    onVisualSearchClicked: () -> Unit = {},
-    onPrivacyPolicyClicked: () -> Unit = {},
-    onContactUsClicked: () -> Unit = {},
-    onShareClicked: () -> Unit = {}
-) {
-    Surface(
-        modifier = modifier,
-        shape = RoundedCornerShape(0.dp),
-    ) {
-        Column(
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            LazyColumn {
-                item {
-                    Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        color = MaterialTheme.colors.primary
-                    ) {
-                        Column(
-                            verticalArrangement = Arrangement.Center,
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Image(
-                                modifier = Modifier
-                                    .size(144.dp)
-                                    .padding(top = xlargeContentPadding),
-                                painter = painterResource(id = R.drawable.ic_hgp_logo),
-                                contentDescription = "HGP Logo",
-                            )
+        composable(MainContentScreen.VoiceSearch.route) {
+            VoiceView(
+                onTextSearchClicked = {
+                    state.startTextSearch()
+                },
 
-                            Text(
-                                modifier = Modifier.padding(vertical = defaultContentPadding),
-                                text = stringResource(id = R.string.app_name_long),
-                                style = MaterialTheme.typography.subtitle2.copy(fontWeight = FontWeight.Bold)
-                            )
-
-                        }
-                    }
+                onPrivacyPolicyClicked = {
+                    state.goToPrivacyPolicy()
+                },
+                onContactUsClicked = {
+                    state.goToContactUs()
+                },
+                onShareClicked = {
+                    // TODO("Not yet implemented")
+                },
+                voiceViewModel = VoiceViewModel(),
+                onBarcodeScanClicked = {
+                    state.startBarcodeScan()
+                },
+                onVisualSearchClicked = {
+                    state.startVisualSearch()
                 }
-
-                item {
-                    Column {
-
-                        Text(
-                            modifier = Modifier
-                                .padding(top = smallContentPadding)
-                                .padding(horizontal = largeContentPadding),
-                            text = "Search",
-                            style = MaterialTheme.typography.subtitle1,
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_capture),
-                            text = stringResource(R.string.barcode_scan),
-                            onClick = onBarcodeScanClicked
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_microphone),
-                            text = stringResource(R.string.voice_search),
-                            onClick = onVoiceSearchClicked
-                        )
-
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_pencil),
-                            text = stringResource(R.string.text_search),
-                            onClick = onTextSearchClicked
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_camera),
-                            text = stringResource(R.string.visual_search),
-                            onClick = onVisualSearchClicked
-                        )
-                    }
-                }
-
-
-                item { Divider(modifier = Modifier.fillMaxWidth(0.90f)) }
-
-                item {
-                    Column {
-                        Text(
-                            modifier = Modifier
-                                .padding(top = smallContentPadding)
-                                .padding(horizontal = largeContentPadding),
-                            text = "General",
-                            style = MaterialTheme.typography.subtitle1,
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_info),
-                            text = stringResource(R.string.privacy_policy),
-                            onClick = onPrivacyPolicyClicked
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_mail),
-                            text = stringResource(R.string.contact_us),
-                            onClick = onContactUsClicked
-                        )
-
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_social),
-                            text = stringResource(R.string.share),
-                            onClick = onShareClicked
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun DrawerItem(
-    modifier: Modifier = Modifier,
-    painter: Painter,
-    contentDescription: String? = null,
-    text: String,
-    contentColor: Color = LocalContentColor.current.copy(alpha = LocalContentAlpha.current),
-    onClick: () -> Unit = {}
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable { onClick() }
-            .then(modifier),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(
-            modifier = Modifier
-                .padding(vertical = defaultContentPadding)
-                .padding(start = largeContentPadding),
-            painter = painter,
-            contentDescription = contentDescription,
-            tint = contentColor,
-        )
-
-        Text(
-            modifier = Modifier.padding(horizontal = largeContentPadding),
-            text = text,
-            style = MaterialTheme.typography.subtitle2.copy(fontSize = 14.sp),
-            color = contentColor
-        )
-    }
-}
-
-@Composable
-private fun HGPBottomAppBar(
-    modifier: Modifier = Modifier,
-    onDrawerClick: () -> Unit = {},
-    onSearchClicked: () -> Unit = {},
-) {
-    BottomAppBar(
-        modifier = modifier,
-    ) {
-        CompositionLocalProvider(LocalContentAlpha provides ContentAlpha.high) {
-            IconButton(onClick = onDrawerClick) {
-                Icon(
-                    Icons.Filled.Menu,
-                    contentDescription = stringResource(R.string.menu_button_description),
-                )
-            }
-        }
-        Spacer(Modifier.weight(1f, true))
-
-        IconButton(onClick = onSearchClicked) {
-            Icon(
-                Icons.Filled.Search,
-                contentDescription = stringResource(R.string.search_button_description),
             )
         }
     }

@@ -9,5 +9,6 @@ sealed class SearchType {
         object QRScanSearch : CameraSearch()
 
         fun isQRScanSearch(): Boolean = this is CameraSearch.QRScanSearch
+        fun isImageSearch(): Boolean = this is CameraSearch.ImageSearch
     }
 }

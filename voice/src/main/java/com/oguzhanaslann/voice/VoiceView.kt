@@ -6,11 +6,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -24,11 +26,9 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.*
-import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
-import com.oguzhanaslann.commonui.theme.HGPTheme
-import com.oguzhanaslann.commonui.theme.defaultContentPadding
-import com.oguzhanaslann.commonui.theme.smallContentPadding
+import com.oguzhanaslann.commonui.theme.*
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -74,32 +74,77 @@ sealed class VoiceSearchProgressState {
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun VoiceView(
-    voiceViewModel: VoiceViewModel = viewModel()
+    modifier: Modifier = Modifier,
+    voiceViewModel: VoiceViewModel = viewModel(),
+    onBarcodeScanClicked: () -> Unit = {},
+    onTextSearchClicked: () -> Unit = {},
+    onVisualSearchClicked: () -> Unit = {},
+    onPrivacyPolicyClicked: () -> Unit = {},
+    onContactUsClicked: () -> Unit = {},
+    onShareClicked: () -> Unit = {}
 ) {
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .align(Alignment.Center),
-        ) {
-            val voiceSearchUIState by voiceViewModel.voiceState.collectAsStateWithLifecycle()
-            when (voiceSearchUIState) {
-                VoiceSearchUIState.Idle -> voiceViewModel.loadHistory()
-                VoiceSearchUIState.HistoryResult -> SearchHistoryView(searchResults = emptyList())
-                VoiceSearchUIState.SearchResult -> SearchResultsView(searchResults = emptyList())
-            }
-        }
+    val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
+    Scaffold(
+        modifier = modifier,
+        scaffoldState = scaffoldState,
+        bottomBar = {
+            HGPBottomAppBar(
+                onDrawerClick = { scope.launch { scaffoldState.drawerState.toggle() } }
+            )
+        },
+        drawerShape = MaterialTheme.shapes.large.copy(
+            topStart = CornerSize(0.dp),
+            bottomStart = CornerSize(0.dp)
+        ),
+        drawerContent = {
+            HGPDrawer(
+                onBarcodeScanClicked = onBarcodeScanClicked,
+                onVoiceSearchClicked = {},
+                onTextSearchClicked = onTextSearchClicked,
+                onVisualSearchClicked = onVisualSearchClicked,
+                onPrivacyPolicyClicked = onPrivacyPolicyClicked,
+                onContactUsClicked = onContactUsClicked,
+                onShareClicked = onShareClicked
+            )
+        },
+        floatingActionButton = {
 
-        Column(modifier = Modifier.align(Alignment.Center)) {
-            val voiceSearchProgressState by voiceViewModel.voiceSearchProgress.collectAsStateWithLifecycle()
-            when (voiceSearchProgressState) {
-                VoiceSearchProgressState.Listening -> ListeningView()
-                VoiceSearchProgressState.Loading -> LoadingView()
-                null -> Unit
+        },
+        floatingActionButtonPosition = FabPosition.Center,
+        isFloatingActionButtonDocked = true,
+        content = { values ->
+            Box(modifier = Modifier
+                .fillMaxSize()
+                .padding(values)
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .align(Alignment.Center),
+                ) {
+                    val voiceSearchUIState by voiceViewModel.voiceState.collectAsStateWithLifecycle()
+                    when (voiceSearchUIState) {
+                        VoiceSearchUIState.Idle -> voiceViewModel.loadHistory()
+                        VoiceSearchUIState.HistoryResult -> SearchHistoryView(searchResults = emptyList())
+                        VoiceSearchUIState.SearchResult -> SearchResultsView(searchResults = emptyList())
+                    }
+                }
+
+                Column(modifier = Modifier.align(Alignment.Center)) {
+                    val voiceSearchProgressState by voiceViewModel.voiceSearchProgress.collectAsStateWithLifecycle()
+                    when (voiceSearchProgressState) {
+                        VoiceSearchProgressState.Listening -> ListeningView()
+                        VoiceSearchProgressState.Loading -> LoadingView()
+                        null -> Unit
+                    }
+                }
             }
         }
-    }
+    )
+
+
 }
 
 
