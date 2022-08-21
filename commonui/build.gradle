@@ -54,6 +54,7 @@ dependencies {
     api "androidx.compose.material:material:$versions.compose_version"
     api "androidx.compose.ui:ui-tooling-preview:$versions.compose_version"
     api "androidx.navigation:navigation-compose:$versions.nav_version"
+    api "androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha01"
     api 'androidx.lifecycle:lifecycle-runtime-ktx:2.5.1'
     api 'androidx.activity:activity-compose:1.5.1'
 

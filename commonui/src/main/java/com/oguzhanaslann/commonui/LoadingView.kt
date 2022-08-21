@@ -76,6 +76,7 @@ fun Blur(
 fun Pulsating(
     modifier : Modifier= Modifier,
     pulseFraction: Float = 1.5f,
+    isPulsing : Boolean = true,
     content: @Composable () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition()
@@ -104,8 +105,8 @@ fun Pulsating(
     )
 
     Box(modifier = modifier
-        .scale(scale)
-        .alpha(alpha)
+        .scale(if (isPulsing) scale else 1f)
+        .alpha(if (isPulsing) alpha else 1f)
     ) {
         Column(
             modifier = Modifier.align(Alignment.Center)

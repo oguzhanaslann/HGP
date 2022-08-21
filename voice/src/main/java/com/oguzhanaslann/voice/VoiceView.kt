@@ -10,6 +10,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
@@ -18,27 +19,90 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import com.oguzhanaslann.commonui.Blur
-import com.oguzhanaslann.commonui.NoResultView
-import com.oguzhanaslann.commonui.Pulsating
-import com.oguzhanaslann.commonui.ShapeableImageView
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.oguzhanaslann.commonui.*
 import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
 import com.oguzhanaslann.commonui.theme.HGPTheme
 import com.oguzhanaslann.commonui.theme.defaultContentPadding
 import com.oguzhanaslann.commonui.theme.smallContentPadding
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.launch
 
-@Composable
-fun VoiceView() {
-    Surface {
-        Column(
-            modifier = Modifier.fillMaxSize(),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Text("Voice")
+class VoiceViewModel : ViewModel() {
+    private val _voiceState = MutableStateFlow<VoiceSearchUIState>(VoiceSearchUIState.Idle)
+    val voiceState: StateFlow<VoiceSearchUIState>
+        get() = _voiceState
+
+    private val _voiceSearchProgress = MutableStateFlow<VoiceSearchProgressState?>(null)
+    val voiceSearchProgress: StateFlow<VoiceSearchProgressState?>
+        get() = _voiceSearchProgress
+
+    fun loadHistory() {
+        viewModelScope.launch {
+            _voiceSearchProgress.emit(VoiceSearchProgressState.Loading)
+            delay(2500)
+            _voiceSearchProgress.emit(null)
+            _voiceState.emit(VoiceSearchUIState.HistoryResult)
+            delay(2500)
+            _voiceSearchProgress.emit(VoiceSearchProgressState.Listening)
+            delay(2500)
+            _voiceState.emit(VoiceSearchUIState.SearchResult)
+            _voiceSearchProgress.emit(VoiceSearchProgressState.Listening)
         }
     }
 }
+
+class VoiceSearchResult()
+
+sealed class VoiceSearchUIState {
+    object Idle : VoiceSearchUIState()
+    object HistoryResult : VoiceSearchUIState()
+    object SearchResult : VoiceSearchUIState()
+}
+
+sealed class VoiceSearchProgressState {
+    object Listening : VoiceSearchProgressState()
+    object Loading : VoiceSearchProgressState()
+}
+
+@OptIn(ExperimentalLifecycleComposeApi::class)
+@Composable
+fun VoiceView(
+    voiceViewModel: VoiceViewModel = viewModel()
+) {
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .align(Alignment.Center),
+        ) {
+            val voiceSearchUIState by voiceViewModel.voiceState.collectAsStateWithLifecycle()
+            when (voiceSearchUIState) {
+                VoiceSearchUIState.Idle -> voiceViewModel.loadHistory()
+                VoiceSearchUIState.HistoryResult -> SearchHistoryView(searchResults = emptyList())
+                VoiceSearchUIState.SearchResult -> SearchResultsView(searchResults = emptyList())
+            }
+        }
+
+        Column(modifier = Modifier.align(Alignment.Center)) {
+            val voiceSearchProgressState by voiceViewModel.voiceSearchProgress.collectAsStateWithLifecycle()
+            when (voiceSearchProgressState) {
+                VoiceSearchProgressState.Listening -> ListeningView()
+                VoiceSearchProgressState.Loading -> LoadingView()
+                null -> Unit
+            }
+        }
+    }
+}
+
+
 
 
 @Composable
@@ -110,6 +174,31 @@ fun SearchHistoryView(
         Text(
             modifier = Modifier.padding(start = 2.dp),
             text = stringResource(R.string.your_search_history),
+            style = MaterialTheme.typography.subtitle1
+        )
+
+        LazyColumn {
+            items(searchResults) { result ->
+                SearchResultView(
+                    searchResult = result,
+                    onClick = { /* TODO */ }
+                )
+
+                Spacer(modifier = Modifier.height(smallContentPadding))
+            }
+        }
+    }
+}
+
+@Composable
+fun SearchResultsView(searchResults: List<SearchResult>) {
+    Column(
+        modifier = Modifier.padding(horizontal = defaultContentPadding),
+        verticalArrangement = Arrangement.spacedBy(smallContentPadding),
+    ) {
+        Text(
+            modifier = Modifier.padding(start = 2.dp),
+            text = stringResource(R.string.results),
             style = MaterialTheme.typography.subtitle1
         )
 
@@ -248,5 +337,15 @@ fun previewSearchResults() {
 fun previewListeningView() {
     HGPTheme {
         ListeningView()
+    }
+}
+
+
+// preview for voice search
+@Preview(showSystemUi = true, showBackground = true)
+@Composable
+fun previewVoiceSearch() {
+    HGPTheme(darkTheme = false) {
+        VoiceView()
     }
 }
