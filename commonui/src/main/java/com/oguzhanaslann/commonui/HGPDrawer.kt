@@ -25,13 +25,13 @@ import com.oguzhanaslann.commonui.theme.xlargeContentPadding
 @Composable
 fun HGPDrawer(
     modifier: Modifier = Modifier,
-    onBarcodeScanClicked: () -> Unit = {},
-    onVoiceSearchClicked: () -> Unit = {},
-    onTextSearchClicked: () -> Unit = {},
-    onVisualSearchClicked: () -> Unit = {},
-    onPrivacyPolicyClicked: () -> Unit = {},
-    onContactUsClicked: () -> Unit = {},
-    onShareClicked: () -> Unit = {}
+    onBarcodeScanClicked: (() -> Unit)? = null,
+    onVoiceSearchClicked: (() -> Unit)? = null,
+    onTextSearchClicked: (() -> Unit)? = null,
+    onVisualSearchClicked: (() -> Unit)? = null,
+    onPrivacyPolicyClicked: (() -> Unit)? = null,
+    onContactUsClicked: (() -> Unit)? = null,
+    onShareClicked: (() -> Unit)? = null
 ) {
     Surface(
         modifier = modifier,
@@ -80,30 +80,38 @@ fun HGPDrawer(
                             style = MaterialTheme.typography.subtitle1,
                         )
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_capture),
-                            text = stringResource(R.string.barcode_scan),
-                            onClick = onBarcodeScanClicked
-                        )
+                        if (onBarcodeScanClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_capture),
+                                text = stringResource(R.string.barcode_scan),
+                                onClick = onBarcodeScanClicked
+                            )
+                        }
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_microphone),
-                            text = stringResource(R.string.voice_search),
-                            onClick = onVoiceSearchClicked
-                        )
+                        if (onVoiceSearchClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_microphone),
+                                text = stringResource(R.string.voice_search),
+                                onClick = onVoiceSearchClicked
+                            )
+                        }
 
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_pencil),
-                            text = stringResource(R.string.text_search),
-                            onClick = onTextSearchClicked
-                        )
+                        if (onTextSearchClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_pencil),
+                                text = stringResource(R.string.text_search),
+                                onClick = onTextSearchClicked
+                            )
+                        }
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_camera),
-                            text = stringResource(R.string.visual_search),
-                            onClick = onVisualSearchClicked
-                        )
+                        if (onVisualSearchClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_camera),
+                                text = stringResource(R.string.visual_search),
+                                onClick = onVisualSearchClicked
+                            )
+                        }
                     }
                 }
 
@@ -120,23 +128,29 @@ fun HGPDrawer(
                             style = MaterialTheme.typography.subtitle1,
                         )
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_info),
-                            text = stringResource(R.string.privacy_policy),
-                            onClick = onPrivacyPolicyClicked
-                        )
+                        if (onPrivacyPolicyClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_info),
+                                text = stringResource(R.string.privacy_policy),
+                                onClick = onPrivacyPolicyClicked
+                            )
+                        }
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_mail),
-                            text = stringResource(R.string.contact_us),
-                            onClick = onContactUsClicked
-                        )
+                        if (onContactUsClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_mail),
+                                text = stringResource(R.string.contact_us),
+                                onClick = onContactUsClicked
+                            )
+                        }
 
-                        DrawerItem(
-                            painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_social),
-                            text = stringResource(R.string.share),
-                            onClick = onShareClicked
-                        )
+                        if (onShareClicked != null) {
+                            DrawerItem(
+                                painter = painterResource(id = R.drawable.ic_social),
+                                text = stringResource(R.string.share),
+                                onClick = onShareClicked
+                            )
+                        }
                     }
                 }
             }

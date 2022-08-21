@@ -10,7 +10,9 @@ import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -26,12 +28,13 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oguzhanaslann.common.SearchType
 import com.oguzhanaslann.commonui.*
-import com.oguzhanaslann.commonui.theme.*
+import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
+import com.oguzhanaslann.commonui.theme.HGPTheme
+import com.oguzhanaslann.commonui.theme.defaultContentPadding
+import com.oguzhanaslann.commonui.theme.smallContentPadding
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
 class VoiceViewModel : ViewModel() {
@@ -42,6 +45,13 @@ class VoiceViewModel : ViewModel() {
     private val _voiceSearchProgress = MutableStateFlow<VoiceSearchProgressState?>(null)
     val voiceSearchProgress: StateFlow<VoiceSearchProgressState?>
         get() = _voiceSearchProgress
+
+    val isListening = _voiceSearchProgress.map { it == VoiceSearchProgressState.Listening }
+        .stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5000),
+        false
+    )
 
     fun loadHistory() {
         viewModelScope.launch {
@@ -56,6 +66,20 @@ class VoiceViewModel : ViewModel() {
             _voiceSearchProgress.emit(VoiceSearchProgressState.Listening)
         }
     }
+
+    fun startListening() {
+        viewModelScope.launch {
+            _voiceSearchProgress.emit(VoiceSearchProgressState.Listening)
+        }
+    }
+
+    fun cancelListening() {
+        viewModelScope.launch {
+            _voiceSearchProgress.emit(null)
+        }
+    }
+
+
 }
 
 class VoiceSearchResult()
@@ -101,7 +125,6 @@ fun VoiceView(
         drawerContent = {
             HGPDrawer(
                 onBarcodeScanClicked = onBarcodeScanClicked,
-                onVoiceSearchClicked = {},
                 onTextSearchClicked = onTextSearchClicked,
                 onVisualSearchClicked = onVisualSearchClicked,
                 onPrivacyPolicyClicked = onPrivacyPolicyClicked,
@@ -109,15 +132,14 @@ fun VoiceView(
                 onShareClicked = onShareClicked
             )
         },
-        floatingActionButton = {
-
-        },
+        floatingActionButton = { VoiceSearchFAB(voiceViewModel) },
         floatingActionButtonPosition = FabPosition.Center,
         isFloatingActionButtonDocked = true,
         content = { values ->
-            Box(modifier = Modifier
-                .fillMaxSize()
-                .padding(values)
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(values)
             ) {
                 Column(
                     modifier = Modifier
@@ -147,7 +169,26 @@ fun VoiceView(
 
 }
 
-
+@OptIn(ExperimentalLifecycleComposeApi::class)
+@Composable
+private fun VoiceSearchFAB(voiceViewModel: VoiceViewModel) {
+    val isListening by voiceViewModel.isListening.collectAsStateWithLifecycle()
+    if (isListening) {
+        FloatingActionButton(onClick = voiceViewModel::cancelListening) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Cancel voice search"
+            )
+        }
+    } else {
+        FloatingActionButton(onClick = voiceViewModel::startListening) {
+            Icon(
+                painter = painterResource(id = com.oguzhanaslann.commonui.R.drawable.ic_microphone),
+                contentDescription = "Start voice search"
+            )
+        }
+    }
+}
 
 
 @Composable
