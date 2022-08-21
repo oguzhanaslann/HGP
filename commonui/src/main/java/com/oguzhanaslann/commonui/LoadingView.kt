@@ -1,23 +1,18 @@
 package com.oguzhanaslann.commonui
 
-import androidx.annotation.FloatRange
-import androidx.annotation.IntRange
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.size
-import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Surface
-import androidx.compose.material.contentColorFor
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.Dp
@@ -36,8 +31,8 @@ fun LoadingView(
     blurColors: LocalBlurColors = HGPExtendedTheme.blurColors
 ) {
 
-    Blur(blurColors = blurColors) {
-        Box(modifier = modifier.fillMaxSize()) {
+    Blur(modifier = modifier, blurColors = blurColors) {
+        Box(modifier = Modifier.fillMaxSize()) {
             LottieAnimationView(
                 modifier = Modifier
                     .size(124.dp)
@@ -74,9 +69,9 @@ fun Blur(
 
 @Composable
 fun Pulsating(
-    modifier : Modifier= Modifier,
+    modifier: Modifier = Modifier,
     pulseFraction: Float = 1.5f,
-    isPulsing : Boolean = true,
+    isPulsing: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val infiniteTransition = rememberInfiniteTransition()
@@ -97,16 +92,17 @@ fun Pulsating(
 
     val alpha by infiniteTransition.animateFloat(
         initialValue = initialValue,
-        targetValue =  0.0f,
+        targetValue = 0.0f,
         animationSpec = infiniteRepeatable(
             animation = animation,
             repeatMode = repeatMode
         )
     )
 
-    Box(modifier = modifier
-        .scale(if (isPulsing) scale else 1f)
-        .alpha(if (isPulsing) alpha else 1f)
+    Box(
+        modifier = modifier
+            .scale(if (isPulsing) scale else 1f)
+            .alpha(if (isPulsing) alpha else 1f)
     ) {
         Column(
             modifier = Modifier.align(Alignment.Center)

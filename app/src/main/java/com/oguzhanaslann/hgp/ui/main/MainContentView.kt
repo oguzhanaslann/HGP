@@ -52,7 +52,7 @@ class MainContentState(
     val scaffoldState: ScaffoldState,
     val navController: NavHostController
 ) {
-    val startDestination = MainContentScreen.Camera.route
+    val startDestination = MainContentScreen.VoiceSearch.route
 
     fun startBarcodeScan(closeDrawer: Boolean = true) {
         navController.navigate(MainContentScreen.Camera.route)
