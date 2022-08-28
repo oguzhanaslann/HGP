@@ -4,4 +4,5 @@
     <string name="your_search_history">Your Search History</string>
     <string name="listening">Listening...</string>
     <string name="results">Results</string>
+    <string name="tap_below_to_start_listening">Tap below to start listening</string>
 </resources>

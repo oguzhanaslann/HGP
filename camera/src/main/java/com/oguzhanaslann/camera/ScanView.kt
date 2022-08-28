@@ -20,11 +20,8 @@ import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.oguzhanaslann.commonui.HGPBottomAppBar
-import com.oguzhanaslann.commonui.HGPDrawer
-import com.oguzhanaslann.commonui.LoadingView
+import com.oguzhanaslann.commonui.*
 import com.oguzhanaslann.commonui.theme.white
-import com.oguzhanaslann.commonui.toggle
 import kotlinx.coroutines.launch
 import java.io.File
 import java.util.*
@@ -51,10 +48,7 @@ fun ScanView(
                 onDrawerClick = { scope.launch { scaffoldState.drawerState.toggle() } }
             )
         },
-        drawerShape = MaterialTheme.shapes.large.copy(
-            topStart = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp)
-        ),
+        drawerShape = MaterialTheme.shapes.drawerShape,
         drawerContent = {
             HGPDrawer(
                 onVoiceSearchClicked = onVoiceSearchClicked,

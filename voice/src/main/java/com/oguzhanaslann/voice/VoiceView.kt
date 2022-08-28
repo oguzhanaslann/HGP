@@ -1,142 +1,76 @@
 package com.oguzhanaslann.voice
 
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.constraintlayout.compose.ConstraintLayout
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.oguzhanaslann.commonui.*
 import com.oguzhanaslann.commonui.theme.HGPExtendedTheme
 import com.oguzhanaslann.commonui.theme.HGPTheme
 import com.oguzhanaslann.commonui.theme.defaultContentPadding
 import com.oguzhanaslann.commonui.theme.smallContentPadding
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 private const val TAG = "VoiceView"
 
-class VoiceViewModel : ViewModel() {
-    private val _voiceState = MutableStateFlow(VoiceSearchUIState.Idle)
-    val voiceState: StateFlow<VoiceSearchUIState>
-        get() = _voiceState
+class VoiceSearchState(
+    val voiceViewModel: VoiceViewModel,
+    val scaffoldState: ScaffoldState,
+    val scope: CoroutineScope
+) {
+    val voiceState
+        get() = voiceViewModel.voiceState
 
-    val isListening = _voiceState.map { it.progress.isListening }
-        .stateIn(
-            viewModelScope,
-            SharingStarted.WhileSubscribed(5000),
-            false
-        )
+    fun toggleDrawer() {
+        scope.launch { scaffoldState.drawerState.toggle() }
+    }
 
-    fun loadHistory() {
-        viewModelScope.launch {
-            _voiceState.value = _voiceState.value.copy(progress = Progress.loading())
-            delay(1000)
-            _voiceState.value = _voiceState.value.copy(
-                progress = Progress.none(),
-                searchResults = null,
-                historyResults = listOf(
-                    SearchResult(
-                        id = "1",
-                        productName = "Product 1",
-                        producerName = "Producer 1",
-                        imageUrl = "https://via.placeholder.com/150",
-                    ),
-
-                    SearchResult(
-                        id = "2",
-                        productName = "Product 2",
-                        producerName = "Producer 2",
-                        imageUrl = "https://via.placeholder.com/150",
-                    ),
-
-                    SearchResult(
-                        id = "3",
-                        productName = "Product 3",
-                        producerName = "Producer 3",
-                        imageUrl = "https://via.placeholder.com/150",
-                    ),
-                )
-            )
-
-
-        }
+    fun stopListening() {
+        voiceViewModel.stopListening()
     }
 
     fun startListening() {
-        viewModelScope.launch {
-            _voiceState.value = _voiceState.value.copy(progress = Progress.listening())
-        }
+        voiceViewModel.startListening()
     }
 
-    fun cancelListening() {
-        viewModelScope.launch {
-            _voiceState.value = _voiceState.value.copy(progress = Progress.none())
-        }
-    }
-
-
-}
-
-data class VoiceSearchUIState(
-    val progress: Progress = Progress.none(),
-    val historyResults: List<SearchResult>? = null,
-    val searchResults: List<SearchResult>? = null
-) {
-
-    fun isIdle(
-        skipCurrentProgress: Boolean = false
-    ) = (progress == Progress.none() && !skipCurrentProgress) && historyResults == null && searchResults == null
-    fun isHistory() = historyResults != null && searchResults == null
-    fun isSearch() = historyResults == null && searchResults != null
-
-    fun isListening() = progress.isListening
-    fun isSearching() = progress.isLoading
-
-    companion object {
-        val Idle = VoiceSearchUIState()
+    fun searchForText(voiceInput: String?) {
+        voiceViewModel.searchForText(voiceInput)
     }
 }
 
-data class Progress(
-    val isListening: Boolean,
-    val isLoading: Boolean
-) {
-
-    init {
-        require(!(isListening && isLoading)) { "Cannot have both listening and loading" }
-    }
-
-    companion object {
-        fun none() = Progress(isListening = false, isLoading = false)
-        fun loading() = Progress(isListening = false, isLoading = true)
-        fun listening() = Progress(isListening = true, isLoading = false)
-    }
+@Composable
+fun rememberVoiceSearchState(
+    voiceViewModel: VoiceViewModel = viewModel(),
+    scaffoldState: ScaffoldState = rememberScaffoldState(),
+    scope: CoroutineScope = rememberCoroutineScope()
+) = remember(voiceViewModel, scaffoldState, scope) {
+    VoiceSearchState(voiceViewModel, scaffoldState, scope)
 }
-
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
@@ -150,21 +84,23 @@ fun VoiceView(
     onContactUsClicked: () -> Unit = {},
     onShareClicked: () -> Unit = {}
 ) {
+    val voiceSearchState = rememberVoiceSearchState(voiceViewModel)
 
-    val scaffoldState = rememberScaffoldState()
-    val scope = rememberCoroutineScope()
+    val voiceInputContract = rememberLauncherForActivityResult(GetVoiceInputContract()) {
+        Log.e(TAG, "VoiceView: voiceInputContract: $it")
+        voiceSearchState.stopListening()
+        voiceSearchState.searchForText(it)
+    }
+
     Scaffold(
         modifier = modifier,
-        scaffoldState = scaffoldState,
+        scaffoldState = voiceSearchState.scaffoldState,
         bottomBar = {
             HGPBottomAppBar(
-                onDrawerClick = { scope.launch { scaffoldState.drawerState.toggle() } }
+                onDrawerClick = { voiceSearchState.toggleDrawer() },
             )
         },
-        drawerShape = MaterialTheme.shapes.large.copy(
-            topStart = CornerSize(0.dp),
-            bottomStart = CornerSize(0.dp)
-        ),
+        drawerShape = MaterialTheme.shapes.drawerShape,
         drawerContent = {
             HGPDrawer(
                 onBarcodeScanClicked = onBarcodeScanClicked,
@@ -175,7 +111,7 @@ fun VoiceView(
                 onShareClicked = onShareClicked
             )
         },
-        floatingActionButton = { VoiceSearchFAB(voiceViewModel) },
+        floatingActionButton = { VoiceSearchFAB(voiceSearchState.voiceViewModel) },
         floatingActionButtonPosition = FabPosition.Center,
         isFloatingActionButtonDocked = true,
         content = { values ->
@@ -184,24 +120,30 @@ fun VoiceView(
                     .fillMaxSize()
                     .padding(values)
             ) {
-                val voiceSearchUIState by voiceViewModel.voiceState.collectAsStateWithLifecycle()
+                val voiceSearchUIState by voiceSearchState.voiceState.collectAsStateWithLifecycle()
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
                         .align(Alignment.Center),
                 ) {
                     when {
-                        voiceSearchUIState.isIdle() -> voiceViewModel.loadHistory()
-                        voiceSearchUIState.isHistory() -> SearchHistoryView(searchResults = voiceSearchUIState.historyResults!!)
-                        voiceSearchUIState.isSearch() -> SearchResultsView(searchResults = emptyList())
+                        voiceSearchUIState.isIdle() -> voiceSearchState.voiceViewModel.loadHistory()
+                        voiceSearchUIState.isHistory() ->
+                            SearchHistoryView(searchResults = voiceSearchUIState.historyResults!!)
+                        voiceSearchUIState.isSearch() ->
+                            SearchResultsView(searchResults = voiceSearchUIState.searchResults!!)
                         else -> Log.e(TAG, "VoiceView: Unknown state")
                     }
                 }
 
                 Column(modifier = Modifier.align(Alignment.Center)) {
                     when {
-                        voiceSearchUIState.isListening() -> ListeningView()
+                        voiceSearchUIState.isListening() -> ListeningView(onClick = {
+                            voiceInputContract.launch(Unit)
+                            voiceSearchState.startListening()
+                        })
                         voiceSearchUIState.isSearching() -> LoadingView()
+                        voiceSearchUIState.isNoProgress() -> Unit
                         else -> Log.e(TAG, "VoiceView: Unknown state of progress")
                     }
                 }
@@ -215,7 +157,8 @@ fun VoiceView(
 @OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 private fun VoiceSearchFAB(voiceViewModel: VoiceViewModel) {
-    val isListening by voiceViewModel.isListening.collectAsStateWithLifecycle()
+    val state by voiceViewModel.voiceState.collectAsStateWithLifecycle()
+    val isListening = state.isListening()
     if (isListening) {
         FloatingActionButton(onClick = voiceViewModel::cancelListening) {
             Icon(
@@ -235,7 +178,7 @@ private fun VoiceSearchFAB(voiceViewModel: VoiceViewModel) {
 
 
 @Composable
-fun ListeningView() {
+fun ListeningView(onClick: () -> Unit = {}) {
     Blur(
         modifier = Modifier.fillMaxSize(),
     ) {
@@ -250,9 +193,10 @@ fun ListeningView() {
                     centerHorizontallyTo(parent)
                     bottom.linkTo(pulsingButton.bottom, margin = 200.dp)
                 },
-                text = stringResource(R.string.listening),
+                text = stringResource(R.string.tap_below_to_start_listening),
                 color = HGPExtendedTheme.blurColors.onBlur,
                 style = MaterialTheme.typography.h5,
+                textAlign = TextAlign.Center
             )
 
             Box(
@@ -269,7 +213,7 @@ fun ListeningView() {
                         color = MaterialTheme.colors.secondary,
                         shape = CircleShape,
                         modifier = Modifier.size(listeningButtonSize),
-                        content = {}
+                        content = emptyComposable
                     )
                 }
 
@@ -279,7 +223,7 @@ fun ListeningView() {
                     modifier = Modifier
                         .size(listeningButtonSize)
                         .align(Alignment.Center),
-                    onClick = {}
+                    onClick = onClick
                 ) {
                     Icon(
                         modifier = Modifier.size(54.dp),
@@ -389,7 +333,7 @@ fun SearchResultView(
 
 @Preview(showSystemUi = false, showBackground = true)
 @Composable
-fun preview() {
+fun previewSearchResultView() {
     HGPTheme(darkTheme = false) {
         SearchResultView(
             modifier = Modifier.padding(horizontal = defaultContentPadding),
@@ -405,7 +349,6 @@ fun preview() {
 }
 
 
-// preview
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun previewNoResult() {
@@ -418,7 +361,6 @@ fun previewNoResult() {
     }
 }
 
-// search results preview
 @Preview(showSystemUi = true, showBackground = true)
 @Composable
 fun previewSearchResults() {
