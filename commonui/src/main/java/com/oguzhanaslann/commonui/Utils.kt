@@ -20,3 +20,10 @@ val Shapes.drawerShape
         topStart = CornerSize(0.dp),
         bottomStart = CornerSize(0.dp)
     )
+
+val Shapes.modalBottomSheetShape
+    @Composable
+    get() = MaterialTheme.shapes.large.copy(
+        bottomEnd = CornerSize(0.dp),
+        bottomStart = CornerSize(0.dp)
+    )

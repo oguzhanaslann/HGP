@@ -1,30 +1,13 @@
 package com.oguzhanaslann.hgp.ui.main
 
-import android.util.Log
-import androidx.camera.core.ImageCapture
-import androidx.camera.core.ImageCaptureException
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.CornerSize
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.*
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
-import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
+import android.widget.TextView
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.material.ScaffoldState
+import androidx.compose.material.rememberScaffoldState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.painter.Painter
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -32,18 +15,12 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.oguzhanaslann.camera.CameraViewModel
 import com.oguzhanaslann.camera.ScanView
-import com.oguzhanaslann.common.SearchType
-import com.oguzhanaslann.commonui.emptyComposable
-import com.oguzhanaslann.commonui.theme.*
-import com.oguzhanaslann.commonui.toggle
-import com.oguzhanaslann.hgp.R
 import com.oguzhanaslann.navigation.MainContentScreen
+import com.oguzhanaslann.textsearch.TextView
 import com.oguzhanaslann.voice.VoiceView
 import com.oguzhanaslann.voice.VoiceViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
-import java.io.File
-import java.util.*
 
 private const val TAG = "MainContentView"
 
@@ -65,7 +42,7 @@ class MainContentState(
     }
 
     fun startTextSearch(closeDrawer: Boolean = true) {
-        // TODO("Not yet implemented")
+        navController.navigate(MainContentScreen.TextSearch.route)
         closeDrawerBy(closeDrawer)
     }
 
@@ -158,6 +135,10 @@ fun MainContentView(
                     state.startVisualSearch()
                 }
             )
+        }
+
+        composable(MainContentScreen.TextSearch.route) {
+            TextView()
         }
     }
 }
